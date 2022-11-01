@@ -1,16 +1,16 @@
-#include "SPIComponent.h"
+#include "SPIMaster.h"
 
-SPIComponent::SPIComponent(size_t bufLength){
+SPIMaster::SPIMaster(size_t bufLength){
     buffSize = bufLength;
 }
-void SPIComponent::InitComponent(uint SPIInst, uint MISO, uint MOSI, uint SCK, uint SS, uint bRate){
+void SPIMaster::InitComponent(uint SPIInst, uint MISO, uint MOSI, uint SCK, uint SS, uint bRate){
     
     if(SPIInst){
         spi_init(spi1, bRate);
-        spi_set_slave(spi1, true);
+        spi_set_slave(spi1, false);
     } else {
         spi_init(spi0, bRate);
-        spi_set_slave(spi0, true);    
+        spi_set_slave(spi0, false);    
     }
 
         //Init GPIO
@@ -20,13 +20,7 @@ void SPIComponent::InitComponent(uint SPIInst, uint MISO, uint MOSI, uint SCK, u
         gpio_set_function(SS, GPIO_FUNC_SPI);
 }
 
-void SPIComponent::slaveWrite(uint8_t data[], size_t dataSize){
-    if(buffSize < dataSize){
-        return;
-    }
-    for (size_t i = 0; i < dataSize; i++){
-        outBuf[i] = data[i];
-    }
+void SPIMaster::masterRead(){
     if(SPIInst){
         spi_write_read_blocking(spi1, outBuf, inBuf, BUF_LEN);
     } else {
