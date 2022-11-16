@@ -1,9 +1,9 @@
-#include "SPIComponent.h"
+#include "SPISlave.h"
 
-SPIComponent::SPIComponent(size_t bufLength){
+SPISlave::SPISlave(size_t bufLength){
     buffSize = bufLength;
 }
-void SPIComponent::InitComponent(uint SPIInst, uint MISO, uint MOSI, uint SCK, uint SS, uint bRate){
+void SPISlave::InitComponent(uint SPIInst, uint MISO, uint MOSI, uint SCK, uint SS, uint bRate){
     
     if(SPIInst){
         spi_init(spi1, bRate);
@@ -20,7 +20,7 @@ void SPIComponent::InitComponent(uint SPIInst, uint MISO, uint MOSI, uint SCK, u
         gpio_set_function(SS, GPIO_FUNC_SPI);
 }
 
-void SPIComponent::slaveWrite(uint8_t data[], size_t dataSize){
+void SPISlave::slaveWrite(uint8_t data[], size_t dataSize){
     if(buffSize < dataSize){
         return;
     }
