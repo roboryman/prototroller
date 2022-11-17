@@ -3,21 +3,21 @@
 SPIMaster::SPIMaster(size_t bufLength){
     buffSize = bufLength;
 }
-void SPIMaster::InitComponent(uint SPIInst, uint MISO, uint MOSI, uint SCK, uint SS, uint bRate){
+void SPIMaster::InitComponent(uint SPIInst, uint TX, uint RX, uint SCK, uint CSN, uint bRate){
     
     if(SPIInst){
         spi_init(spi1, bRate);
-        spi_set_slave(spi1, false);
+        //spi_set_slave(spi1, false);
     } else {
         spi_init(spi0, bRate);
-        spi_set_slave(spi0, false);    
+        //spi_set_slave(spi0, false);    
     }
 
-        //Init GPIO
-        gpio_set_function(MISO, GPIO_FUNC_SPI);
-        gpio_set_function(MOSI, GPIO_FUNC_SPI);
-        gpio_set_function(SCK, GPIO_FUNC_SPI);
-        gpio_set_function(SS, GPIO_FUNC_SPI);
+    //Init GPIO
+    gpio_set_function(TX, GPIO_FUNC_SPI);
+    gpio_set_function(RX, GPIO_FUNC_SPI);
+    gpio_set_function(SCK, GPIO_FUNC_SPI);
+    gpio_set_function(CSN, GPIO_FUNC_SPI);
 }
 
 void SPIMaster::masterRead(){

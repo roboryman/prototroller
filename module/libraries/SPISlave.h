@@ -17,12 +17,12 @@
 #define PLEASE_IDENTIFY    0xAA
 
 class SPISlave {
-    uint8_t inBuf[BUF_LEN];
-    uint8_t outBuf[BUF_LEN];
-    size_t buffSize;
-    uint SPIInst = 0;
-
     public:
+        uint8_t inBuf[BUF_LEN];
+        uint8_t outBuf[BUF_LEN];
+        size_t buffSize;
+        uint SPIInst = 0;
+
         SPISlave(size_t bufLength);
         void InitComponent(uint SPIInst, uint TX, uint RX, uint SCK, uint CSN, uint bRate);
         bool SlaveWrite(uint8_t data[], size_t dataSize);
