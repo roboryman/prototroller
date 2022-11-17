@@ -28,6 +28,9 @@ target_link_libraries(joystick-module PRIVATE
     hardware_adc
 )
 
+pico_enable_stdio_usb(button-module 1)
+pico_enable_stdio_usb(joystick-module 1)
+
 pico_add_extra_outputs(button-module)
 pico_add_extra_outputs(joystick-module)
 

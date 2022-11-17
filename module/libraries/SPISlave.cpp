@@ -38,10 +38,6 @@ bool SPISlave::SlaveWrite(uint8_t data[], size_t dataSize) {
         return false;
     }
 
-    for (size_t i = 0; i < dataSize; i++) {
-        outBuf[i] = data[i];
-    }
-
     if(SPIInst) {
         spi_write_read_blocking(spi1, outBuf, inBuf, BUF_LEN);
     } else {
