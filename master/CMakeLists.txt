@@ -1,3 +1,6 @@
+set(FAMILY rp2040)
+set(BOARD pico_sdk)
+set(TINYUSB_FAMILY_PROJECT_NAME_PREFIX "tinyusb_dev_")
 cmake_minimum_required(VERSION 3.13)
 
 add_executable(master)
@@ -13,6 +16,7 @@ target_sources(master PUBLIC
         # Make sure TinyUSB can find tusb_config.h
         target_include_directories(master PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/src
+	${CMAKE_CURRENT_LIST_DIR}/tinyusb
         )
 
 # In addition to pico_stdlib required for common PicoSDK functionality, add dependency on tinyusb_device
