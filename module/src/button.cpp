@@ -18,15 +18,19 @@ int main() {
     );
 
     // Initialize logging if enabled
-    if(LOGGING)
-    {
+    //if(LOGGING)
+    //{
         stdio_init_all();
-    }
+    //}
 
-    printf("Button Module");
+    sleep_ms(10000);
+
+    printf("BUTTON MODULE\n");
 
     // Emable SPI0 at 1 MHz and connect to GPIOs
     spi.SlaveInit();
+
+    printf("Slave initialized.\n");
 
     // Initialize the active-low button GPIO
     gpio_init(BUTTON_PIN);
@@ -36,6 +40,8 @@ int main() {
 
     // Using an external pull-up, so disable internal pulls
     gpio_set_pulls(BUTTON_PIN, false, false);
+
+    printf("Button GPIO initialized.\n");
 
     // Make SPI pins available for use with PicoTool
     // bi_decl(
@@ -58,21 +64,27 @@ int main() {
     uint8_t out_buf[BUF_LEN] = {0};
     uint8_t in_buf[BUF_LEN] = {0};
 
+    printf("Module buffers initialized.\n");
+
     // After identifier is sent, continually send the GPIO state
     while(true)
     {
         bool button_state = gpio_get(BUTTON_PIN); // Active-Low
         out_buf[0] = button_state;
 
-        // DEBUG - Set ALL buffer data to the button state
-        for(uint8_t i = 0; i < BUF_LEN; i++)
+        // DEBUG
+        for(uint16_t i = 0; i < BUF_LEN; i++)
         {
             out_buf[i] = button_state;
         }
 
+        printf("(DEBUG) Outbut buffer set to button state\n");
+
         printf( button_state ? "Not Pressed\n" : "Pressed\n");
 
-        spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+        spi.SlaveWrite(out_buf, in_buf, BUF_LEN); // this SHOULD block if it cannot send...
+
+        printf("Slave Write Executed\n");
     
 
         // Write the button state, and re-send module identifier if requested

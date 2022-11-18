@@ -3,11 +3,10 @@
 #include "../libraries/SPIMaster.h"
 
 
-void printbuf(uint8_t *buf, size_t len)
+void printbuf(uint8_t buf[], size_t len)
 {
-    uint8_t i;
-    for (i = 0; i < len; ++i)
-    {
+    int i;
+    for (i = 0; i < len; ++i) {
         if (i % 16 == 15)
             printf("%02x\n", buf[i]);
         else
@@ -15,8 +14,7 @@ void printbuf(uint8_t *buf, size_t len)
     }
 
     // append trailing newline if there isn't one
-    if (i % 16)
-    {
+    if (i % 16) {
         putchar('\n');
     }
 }
@@ -58,28 +56,35 @@ int main() {
     
     //const float conversion_factor = 3.3f / (1 << 12);
     while(true) {
-
         // Select the button module, read module data, and print
-        master.SlaveSelect(0);
+        //master.SlaveSelect(0);
+        gpio_put(13, 0);
+        gpio_put(14, 1);
         //sleep_ms(500); // DEBUG
         master.MasterRead(out_buf, in_buf, BUF_LEN);
-        master.SlaveSelect(NO_SLAVE_SELECTED);
+        //master.SlaveSelect(NO_SLAVE_SELECTED);
+        gpio_put(13, 1);
+        gpio_put(14, 1);
         printf("BUTTON PACKET\n");
         printbuf(in_buf, BUF_LEN);
         printf("\n");
 
-        sleep_ms(500);
+        sleep_ms(2000);
 
         // Select the joystick module, read module data, and print
-        master.SlaveSelect(1);
+        //master.SlaveSelect(1);
+        gpio_put(13, 1);
+        gpio_put(14, 0);
         //sleep_ms(500); // DEBUG
         master.MasterRead(out_buf, in_buf, BUF_LEN);
-        master.SlaveSelect(NO_SLAVE_SELECTED);
+        //master.SlaveSelect(NO_SLAVE_SELECTED);
+        gpio_put(13, 1);
+        gpio_put(14, 1);
         printf("JOYSTICK PACKET\n");
         printbuf(in_buf, BUF_LEN);
         printf("\n");
 
-        sleep_ms(500);
+        sleep_ms(2000);
 
 
         // gpio_put(14, 0);

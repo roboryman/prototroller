@@ -46,19 +46,19 @@ bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
     // }
     
     // Overide the output enable to disable, in case the Pico is not selected but driving the TX pin
-    gpio_set_oeover(TXPin, GPIO_OVERRIDE_LOW);
+    //gpio_set_oeover(TXPin, GPIO_OVERRIDE_LOW);
     //gpio_set_function(TXPin, GPIO_FUNC_NULL); // Uncomment if TX pin still drives low when not selected
 
     // Check if this Pico slave is selected
-    if(!gpio_get(CSNPin))
-    {
+    //if(!gpio_get(CSNPin))
+    //{
         // Set TX pin override status back to normal
-        gpio_set_oeover(TXPin, GPIO_OVERRIDE_NORMAL);
+        //gpio_set_oeover(TXPin, GPIO_OVERRIDE_NORMAL);
         //gpio_set_function(TXPin, GPIO_FUNC_SPI); // Uncomment if TX pin still drives low when not selected
 
         // Read/Write data
         spi_write_read_blocking(spi, out_buf, in_buf, BUF_LEN);
-    }
+    //}
 
     return false;
     //return in_buf[0] == PLEASE_IDENTIFY;

@@ -20,20 +20,26 @@ int main() {
     );
 
     // Initialize logging if enabled
-    if(LOGGING)
-    {
+    //if(LOGGING)
+    //{
         stdio_init_all();
-    }
+    //}
+
+    sleep_ms(10000);
 
     printf("Joystick Module");
 
     // Emable SPI0 at 1 MHz and connect to GPIOs
     spi.SlaveInit();
 
+    printf("Slave initialized.\n");
+
     // Initialize the ADC/GPIO
     adc_init();
     adc_gpio_init(VRX_PIN);
     adc_gpio_init(VRY_PIN);
+
+    printf("ADC initialized.\n");
 
     // First data sent over SPI is the module identifier
     //spi.SlaveWriteIdentifier(JOYSTICK_MODULE_ID);
@@ -41,6 +47,8 @@ int main() {
     // Declare and initialize buffers
     uint8_t out_buf[BUF_LEN] = {0};
     uint8_t in_buf[BUF_LEN] = {0};
+
+    printf("Module buffers initialized.\n");
 
     // After identifier is sent, continually send the GPIO state
     while(true)
@@ -60,7 +68,7 @@ int main() {
         out_buf[3] = (y >> 8);
 
         // DEBUG - Set ALL buffer data to the 4-byte joystick data
-        for(uint8_t i = 0; i < BUF_LEN; i += 4)
+        for(uint16_t i = 0; i < BUF_LEN; i += 4)
         {
             out_buf[i]   = x;
             out_buf[i+1] = (x >> 8);
@@ -68,10 +76,14 @@ int main() {
             out_buf[i+3] = (y >> 8);
         }
 
+        printf("(DEBUG) Outbut buffer set to button state\n");
+
         printf("X : %i\n", x);
         printf("Y : %i\n", y);
 
         spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+
+        printf("Slave Write Executed\n");
 
         // // Write the joystick data, and re-send module identifier if requested
         // while(spi.SlaveWrite(buf, 4))
