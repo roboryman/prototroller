@@ -9,7 +9,13 @@
 
 int main() {
     Component button;
-    SPISlave spi(0x100);
+    SPISlave spi(
+        spi_default,
+        SPI_TX_PIN,
+        SPI_RX_PIN,
+        SPI_SCK_PIN,
+        SPI_CSN_PIN
+    );
 
     // Initialize logging if enabled
     if(LOGGING)
@@ -20,15 +26,7 @@ int main() {
     printf("Button Module");
 
     // Emable SPI0 at 1 MHz and connect to GPIOs
-    spi.InitComponent
-    (
-        DEFAULT_SPI,
-        SPI_TX_PIN,
-        SPI_RX_PIN,
-        SPI_SCK_PIN,
-        SPI_CSN_PIN,
-        1000 * 1000
-    );
+    spi.SlaveInit();
 
     // Initialize the active-low button GPIO
     gpio_init(BUTTON_PIN);
@@ -51,22 +49,37 @@ int main() {
     // );
 
     // First data sent over SPI is the module identifier
-    spi.SlaveWriteIdentifier(BUTTON_MODULE_ID);
+    //spi.SlaveWriteIdentifier(BUTTON_MODULE_ID);
 
     // Declare button state data holder
-    uint8_t state;
+    //uint8_t state;
+
+    // Declare and initialize buffers
+    uint8_t out_buf[BUF_LEN] = {0};
+    uint8_t in_buf[BUF_LEN] = {0};
 
     // After identifier is sent, continually send the GPIO state
     while(true)
     {
-        state = gpio_get(BUTTON_PIN);
-        printf( state ? "Not Pressed\n" : "Pressed\n");
+        bool button_state = gpio_get(BUTTON_PIN); // Active-Low
+        out_buf[0] = button_state;
+
+        // DEBUG - Set ALL buffer data to the button state
+        for(uint8_t i = 0; i < BUF_LEN; i++)
+        {
+            out_buf[i] = button_state;
+        }
+
+        printf( button_state ? "Not Pressed\n" : "Pressed\n");
+
+        spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+    
 
         // Write the button state, and re-send module identifier if requested
-        while(spi.SlaveWrite(&state, 1))
-        {
-            spi.SlaveWriteIdentifier(BUTTON_MODULE_ID);
-        }
+        // while(spi.SlaveWrite(&state, 1))
+        // {
+        //     spi.SlaveWriteIdentifier(BUTTON_MODULE_ID);
+        // }
     }
 
 }

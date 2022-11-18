@@ -10,21 +10,24 @@
 #define SPI_SCK_PIN 18
 #define SPI_CSN_PIN 17
 #define SPI_RX_PIN  16
-#define DEFAULT_SPI 0
-
+#define BAUD_RATE 1000*1000
 #define BUF_LEN 0x100
+#define PLEASE_IDENTIFY 0xAA
 
-#define PLEASE_IDENTIFY    0xAA
+class SPISlave
+{
+    // uint8_t inBuf[BUF_LEN];
+    // uint8_t outBuf[BUF_LEN];
+    // size_t buffSize;
+    spi_inst_t *spi;
+    uint TXPin;
+    uint RXPin;
+    uint SCKPin;
+    uint CSNPin;
 
-class SPISlave {
     public:
-        uint8_t inBuf[BUF_LEN];
-        uint8_t outBuf[BUF_LEN];
-        size_t buffSize;
-        uint SPIInst = 0;
-
-        SPISlave(size_t bufLength);
-        void InitComponent(uint SPIInst, uint TX, uint RX, uint SCK, uint CSN, uint bRate);
-        bool SlaveWrite(uint8_t data[], size_t dataSize);
-        void SlaveWriteIdentifier(uint8_t identifier);
+        SPISlave(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CSNPin);
+        void SlaveInit();
+        bool SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len);
+        //void SlaveWriteIdentifier(uint8_t identifier);
 };

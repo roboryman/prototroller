@@ -11,7 +11,13 @@
 
 int main() {
     Component joystick;
-    SPISlave spi(0x100);
+    SPISlave spi(
+        spi_default,
+        SPI_TX_PIN,
+        SPI_RX_PIN,
+        SPI_SCK_PIN,
+        SPI_CSN_PIN
+    );
 
     // Initialize logging if enabled
     if(LOGGING)
@@ -22,15 +28,7 @@ int main() {
     printf("Joystick Module");
 
     // Emable SPI0 at 1 MHz and connect to GPIOs
-    spi.InitComponent
-    (
-        DEFAULT_SPI,
-        SPI_TX_PIN,
-        SPI_RX_PIN,
-        SPI_SCK_PIN,
-        SPI_CSN_PIN,
-        1000 * 1000
-    );
+    spi.SlaveInit();
 
     // Initialize the ADC/GPIO
     adc_init();
@@ -38,41 +36,48 @@ int main() {
     adc_gpio_init(VRY_PIN);
 
     // First data sent over SPI is the module identifier
-    spi.SlaveWriteIdentifier(JOYSTICK_MODULE_ID);
+    //spi.SlaveWriteIdentifier(JOYSTICK_MODULE_ID);
 
-    // Declare a buffer to use in our infinite loop
-    uint8_t buf[4];
-
-    // Declare x-axis and y-axis data holders
-    uint16_t x;
-    uint16_t y;
+    // Declare and initialize buffers
+    uint8_t out_buf[BUF_LEN] = {0};
+    uint8_t in_buf[BUF_LEN] = {0};
 
     // After identifier is sent, continually send the GPIO state
     while(true)
     {
         // Read the X-axis by starting an ADC conversion
         adc_select_input(0); // Select ADC0 (x)
-        x = adc_read();
+        uint16_t x = adc_read();
 
         // Read the Y-axis by starting an ADC conversion
         adc_select_input(1); // Select ADC1 (y)
-        y = adc_read();
+        uint16_t y = adc_read();
         
-        // Load the data into a 4-byte data buffer (xLSB, xMSB, yLSB, yMSB)
-        buf[0] = x;
-        buf[1] = (x >> 8);
-        buf[2] = y;
-        buf[3] = (y >> 8);
+        // Load the joystick data into the buffer (xLSB, xMSB, yLSB, yMSB)
+        out_buf[0] = x;
+        out_buf[1] = (x >> 8);
+        out_buf[2] = y;
+        out_buf[3] = (y >> 8);
 
-        // Log the joystick data (no floating point math here - expensive, and we care about latency)
+        // DEBUG - Set ALL buffer data to the 4-byte joystick data
+        for(uint8_t i = 0; i < BUF_LEN; i += 4)
+        {
+            out_buf[i]   = x;
+            out_buf[i+1] = (x >> 8);
+            out_buf[i+2] = y;
+            out_buf[i+3] = (y >> 8);
+        }
+
         printf("X : %i\n", x);
         printf("Y : %i\n", y);
 
-        // Write the joystick data, and re-send module identifier if requested
-        while(spi.SlaveWrite(buf, 4))
-        {
-            spi.SlaveWriteIdentifier(JOYSTICK_MODULE_ID);
-        }
+        spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+
+        // // Write the joystick data, and re-send module identifier if requested
+        // while(spi.SlaveWrite(buf, 4))
+        // {
+        //     spi.SlaveWriteIdentifier(JOYSTICK_MODULE_ID);
+        // }
     }
 
 }
