@@ -19,6 +19,8 @@
 
 #define NO_SLAVE_SELECTED 7
 
+#define PLEASE_IDENTIFY 0xAA
+
 class SPIMaster
 {
     // size_t buffSize;

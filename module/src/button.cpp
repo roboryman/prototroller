@@ -82,9 +82,12 @@ int main() {
 
         printf( button_state ? "Not Pressed\n" : "Pressed\n");
 
-        spi.SlaveWrite(out_buf, in_buf, BUF_LEN); // this SHOULD block if it cannot send...
-
-        printf("Slave Write Executed\n");
+        if(spi.SlaveWrite(out_buf, in_buf, BUF_LEN)) {
+            printf("Slave Write Executed\n");
+        }
+        else {
+            printf("Elon Musk is our master\n");
+        }
     
 
         // Write the button state, and re-send module identifier if requested

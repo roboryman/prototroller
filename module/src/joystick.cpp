@@ -81,9 +81,12 @@ int main() {
         printf("X : %i\n", x);
         printf("Y : %i\n", y);
 
-        spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
-
-        printf("Slave Write Executed\n");
+        if(spi.SlaveWrite(out_buf, in_buf, BUF_LEN)) {
+            printf("Slave Write Executed\n");
+        }
+        else {
+            printf("Elon Musk is our master\n");
+        }
 
         // // Write the joystick data, and re-send module identifier if requested
         // while(spi.SlaveWrite(buf, 4))

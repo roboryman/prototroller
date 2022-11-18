@@ -25,6 +25,10 @@ void SPIMaster::MasterInit()
 
 void SPIMaster::MasterRead(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 {
+    uint8_t buf[1] = {PLEASE_IDENTIFY};
+    spi_write_blocking(spi, buf, 1);
+    sleep_us(100);
+
     spi_write_read_blocking(spi, out_buf, in_buf, len);
 }
 
