@@ -1,5 +1,4 @@
 #include "pico/stdlib.h"
-#include <stdio.h>
 #include "../libraries/SPIMaster.h"
 #include "usb_descriptors.h"
 #include "tusb.h"
@@ -17,6 +16,15 @@ static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
 
 void led_blinking_task(void);
 void hid_task(void);
+
+int filter_joystick_deadzone(int coord) {
+  int in_min = 0, in_max = 65000, out_min = -5, out_max = 5;
+	int result = int((coord - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
+	if (abs(coord - 32768) > 500)
+		return result;
+	else
+		return 0;
+}
 
 void printbuf(uint8_t buf[], size_t len) {
     int i;
@@ -101,6 +109,11 @@ int main() {
     //     printf("\n");
 
     //     sleep_ms(2000);
+
+    // uint16_t x = (master.inBuf[1] << 8) | master.inBuf[0];
+    // uint16_t y = (master.inBuf[3] << 8) | master.inBuf[2];
+
+    //filter_joystick_deadzone()
 
     while (1)
     {
