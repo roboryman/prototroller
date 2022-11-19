@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include "../libraries/SPIMaster.h"
 
+typedef enum {
+    NOT_CONNECTED,
+    BUTTON_MODULE,
+    JOYSTICK_MODULE
+} moduleID_t;
 
 void printbuf(uint8_t buf[], size_t len)
 {
@@ -55,6 +60,27 @@ int main() {
     uint8_t in_buf[BUF_LEN];
     
     //const float conversion_factor = 3.3f / (1 << 12);
+    sleep_ms(10000);
+    printf("Identifying Modules...");
+        gpio_put(13, 0);
+        gpio_put(14, 1);  
+
+        uint8_t module1 = master.MasterIdentify();
+
+        printf("Module 1 is Identified as %u\n", module1);
+        gpio_put(13, 1);
+        gpio_put(14, 1);
+
+        gpio_put(13, 1);
+        gpio_put(14, 0);  
+
+        uint8_t module2 = master.MasterIdentify();
+        
+        printf("Module 2 is Identified as %u\n", module2);
+        gpio_put(13, 1);
+        gpio_put(14, 1);
+
+
     while(true) {
         // Select the button module, read module data, and print
         //master.SlaveSelect(0);
@@ -69,7 +95,7 @@ int main() {
         printbuf(in_buf, BUF_LEN);
         printf("\n");
 
-        sleep_ms(2000);
+        //sleep_ms(500);
 
         // Select the joystick module, read module data, and print
         //master.SlaveSelect(1);
@@ -84,7 +110,7 @@ int main() {
         printbuf(in_buf, BUF_LEN);
         printf("\n");
 
-        sleep_ms(2000);
+        //sleep_ms(500);
 
 
         // gpio_put(14, 0);

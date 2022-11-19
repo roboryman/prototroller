@@ -19,7 +19,9 @@
 
 #define NO_SLAVE_SELECTED 7
 
+//-- Handshake Identifiers --//
 #define PLEASE_IDENTIFY 0xAA
+#define DATA_REQUEST 0xBB
 
 class SPIMaster
 {
@@ -38,5 +40,6 @@ class SPIMaster
         SPIMaster(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CSNPin);
         void MasterInit();
         void MasterRead(uint8_t *out_buf, uint8_t *in_buf, size_t len);
+        uint8_t MasterIdentify();
         void SlaveSelect(uint8_t CSN);
 };

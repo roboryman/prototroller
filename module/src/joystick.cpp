@@ -16,7 +16,8 @@ int main() {
         SPI_TX_PIN,
         SPI_RX_PIN,
         SPI_SCK_PIN,
-        SPI_CSN_PIN
+        SPI_CSN_PIN,
+        JOYSTICK_IDENTITY
     );
 
     // Initialize logging if enabled
@@ -85,14 +86,9 @@ int main() {
             printf("Slave Write Executed\n");
         }
         else {
-            printf("Elon Musk is our master\n");
+            printf("Slave Write FAILED\n");
         }
 
-        // // Write the joystick data, and re-send module identifier if requested
-        // while(spi.SlaveWrite(buf, 4))
-        // {
-        //     spi.SlaveWriteIdentifier(JOYSTICK_MODULE_ID);
-        // }
     }
 
 }

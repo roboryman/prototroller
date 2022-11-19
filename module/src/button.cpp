@@ -11,10 +11,11 @@ int main() {
     Component button;
     SPISlave spi(
         spi_default,
-        SPI_TX_PIN,
-        SPI_RX_PIN,
-        SPI_SCK_PIN,
-        SPI_CSN_PIN
+        3,
+        4,
+        2,
+        5,
+        BUTTON_IDENTITY
     );
 
     // Initialize logging if enabled
@@ -86,15 +87,8 @@ int main() {
             printf("Slave Write Executed\n");
         }
         else {
-            printf("Elon Musk is our master\n");
+            printf("Slave Write FAILED\n");
         }
-    
-
-        // Write the button state, and re-send module identifier if requested
-        // while(spi.SlaveWrite(&state, 1))
-        // {
-        //     spi.SlaveWriteIdentifier(BUTTON_MODULE_ID);
-        // }
     }
 
 }

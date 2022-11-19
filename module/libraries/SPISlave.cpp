@@ -1,12 +1,13 @@
 #include "SPISlave.h"
 
-SPISlave::SPISlave(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CSNPin)
+SPISlave::SPISlave(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CSNPin,uint8_t ID)
 {
     this->spi = spi;
     this->TXPin = TXPin;
     this->RXPin = RXPin;
     this->SCKPin = SCKPin;
     this->CSNPin = CSNPin;
+    this->ID = ID;
 }
 
 /* InitComponent
@@ -42,17 +43,14 @@ void SPISlave::SlaveInit()
  */
 bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 {
-    // Ensure the buffer data size is <= buffer size
-    // if(buffSize < dataSize) {
-    //     return false;
-    // }
 
     uint8_t buf[1];
 
     // Block until the master sends ready to write signal
     spi_read_blocking(spi, 0x09, buf, 1);
     
-    if(buf[0] == PLEASE_IDENTIFY)
+    //Data Read Handshake
+    if(buf[0] == DATA_REQUEST)
     {
         // Take control of TX line
         gpio_set_oeover(TXPin, GPIO_OVERRIDE_NORMAL);
@@ -65,13 +63,23 @@ bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 
         return true;
     }
+    //Identification Handshake
+    if(buf[0] == PLEASE_IDENTIFY)
+    {
+        // Take control of TX line
+        gpio_set_oeover(TXPin, GPIO_OVERRIDE_NORMAL);
+        buf[0] = 0;
+        buf[0] = ID;
+        //Write Identifier 
+        spi_write_blocking(spi, buf, 1);
 
-    
+        // Overide the output enable to disable, in case the Pico is not selected but driving the TX pin
+        gpio_set_oeover(TXPin, GPIO_OVERRIDE_LOW);
 
-    //spi_write_read_blocking(spi, out_buf, in_buf, BUF_LEN);
+        return true;
+    }
 
     return false;
-    //return in_buf[0] == PLEASE_IDENTIFY;
 }
 
 /* SlaveWriteIdentifier
@@ -87,4 +95,3 @@ bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 //         spi_write_read_blocking(spi0, outBuf, inBuf, BUF_LEN);
 //     }
 // }
-
