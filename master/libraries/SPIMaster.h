@@ -17,9 +17,14 @@
 #define BAUD_RATE 1000*1000
 #define BUF_LEN 0x100
 
-#define NO_SLAVE_SELECTED 7
+//-- Slave Selection --//
+#define MAX_MODULES 25
+#define NO_SLAVE_SELECTED_CSN 7
 
+//-- Handshake Identifiers --//
 #define PLEASE_IDENTIFY 0xAA
+#define DATA_REQUEST 0xBB
+#define WAIT_FOR_SLAVE_US 100
 
 class SPIMaster
 {
@@ -33,10 +38,12 @@ class SPIMaster
     uint RXPin;
     uint SCKPin;
     uint CSNPin;
+    bool externalDecoder;
 
     public:
-        SPIMaster(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CSNPin);
+        SPIMaster(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CSNPin, bool externalDecoder);
         void MasterInit();
         void MasterRead(uint8_t *out_buf, uint8_t *in_buf, size_t len);
+        uint8_t MasterIdentify();
         void SlaveSelect(uint8_t CSN);
 };
