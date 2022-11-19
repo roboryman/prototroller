@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
+#define MOUSE_SENS 5
+
 enum
 {
   BLINK_NOT_MOUNTED = 250,
@@ -21,6 +24,9 @@ typedef enum
 } moduleID_t;
 
 static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
+
+uint8_t delta_x;
+uint8_t delta_y;
 
 void led_blinking_task(void);
 void hid_task(void);
@@ -59,7 +65,7 @@ int main()
   board_init();
   tusb_init();
 
-  printf("SPI Master\n");
+  // printf("SPI Master\n");
 
   SPIMaster master(
       spi_default,
@@ -91,23 +97,23 @@ int main()
   uint8_t in_buf[BUF_LEN];
 
   // const float conversion_factor = 3.3f / (1 << 12);
-  sleep_ms(10000);
-  printf("Identifying Modules...");
+  // sleep_ms(10000);
+  // printf("Identifying Modules...");
   gpio_put(13, 0);
   gpio_put(14, 1);
 
-  uint8_t module1 = master.MasterIdentify();
+  // uint8_t module1 = master.MasterIdentify();
 
-  printf("Module 1 is Identified as %u\n", module1);
+  // printf("Module 1 is Identified as %u\n", module1);
   gpio_put(13, 1);
   gpio_put(14, 1);
 
   gpio_put(13, 1);
   gpio_put(14, 0);
 
-  uint8_t module2 = master.MasterIdentify();
+  // uint8_t module2 = master.MasterIdentify();
 
-  printf("Module 2 is Identified as %u\n", module2);
+  // printf("Module 2 is Identified as %u\n", module2);
   gpio_put(13, 1);
   gpio_put(14, 1);
 
@@ -116,35 +122,43 @@ int main()
 
     // Select the button module, read module data, and print
     // master.SlaveSelect(0);
-    gpio_put(13, 0);
-    gpio_put(14, 1);
-    // sleep_ms(500); // DEBUG
-    master.MasterRead(out_buf, in_buf, BUF_LEN);
-    // master.SlaveSelect(NO_SLAVE_SELECTED);
-    gpio_put(13, 1);
-    gpio_put(14, 1);
-    printf("BUTTON PACKET\n");
-    printbuf(in_buf, BUF_LEN);
-    printf("\n");
+    // gpio_put(13, 0);
+    // gpio_put(14, 1);
+    // // sleep_ms(500); // DEBUG
+    // master.MasterRead(out_buf, in_buf, BUF_LEN);
+    // // master.SlaveSelect(NO_SLAVE_SELECTED);
+    // gpio_put(13, 1);
+    // gpio_put(14, 1);
+    // // printf("BUTTON PACKET\n");
+    // // printbuf(in_buf, BUF_LEN);
+    // // printf("\n");
 
-    // sleep_ms(500);
+    // // sleep_ms(500);
 
-    // Select the joystick module, read module data, and print
-    // master.SlaveSelect(1);
+    // // Select the joystick module, read module data, and print
+    // // master.SlaveSelect(1);
     gpio_put(13, 1);
     gpio_put(14, 0);
-    // sleep_ms(500); // DEBUG
+    // // sleep_ms(500); // DEBUG
     master.MasterRead(out_buf, in_buf, BUF_LEN);
-    // master.SlaveSelect(NO_SLAVE_SELECTED);
+    // // master.SlaveSelect(NO_SLAVE_SELECTED);
     gpio_put(13, 1);
     gpio_put(14, 1);
-    printf("JOYSTICK PACKET\n");
-    printbuf(in_buf, BUF_LEN);
-    printf("\n");
+    // // printf("JOYSTICK PACKET\n");
+    // // printbuf(in_buf, BUF_LEN);
+    // // printf("\n");
+
+    // // calculate values for joystick x and y (range: [0, 4095])
+    uint16_t x = (in_buf[1] << 8) | in_buf[0];
+    uint16_t y = (in_buf[3] << 8) | in_buf[2];
+
+    delta_x = 1;
+    delta_y = 1;
 
     tud_task(); // tinyusb device task
     led_blinking_task();
     hid_task();
+
   }
 }
 
@@ -186,97 +200,11 @@ void tud_resume_cb(void)
 static void send_hid_report(uint8_t report_id, uint32_t btn)
 {
   // skip if hid is not ready yet
-  if (!tud_hid_ready())
-    return;
-
-  switch (report_id)
-  {
-  case REPORT_ID_KEYBOARD:
-  {
-    // use to avoid send multiple consecutive zero report for keyboard
-    static bool has_keyboard_key = false;
-
-    if (btn)
-    {
-      uint8_t keycode[6] = {0};
-      keycode[0] = HID_KEY_A;
-
-      tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keycode);
-      has_keyboard_key = true;
-    }
-    else
-    {
-      // send empty key report if previously has key pressed
-      if (has_keyboard_key)
-        tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, NULL);
-      has_keyboard_key = false;
-    }
+  if (!tud_hid_ready()) {
+    return;  
   }
-  break;
-
-  case REPORT_ID_MOUSE:
-  {
-    int8_t const delta = 5;
-
-    // no button, right + down, no scroll, no pan
-    tud_hid_mouse_report(REPORT_ID_MOUSE, 0x00, delta, delta, 0, 0);
-  }
-  break;
-
-  case REPORT_ID_CONSUMER_CONTROL:
-  {
-    // use to avoid send multiple consecutive zero report
-    static bool has_consumer_key = false;
-
-    if (btn)
-    {
-      // volume down
-      uint16_t volume_down = HID_USAGE_CONSUMER_VOLUME_DECREMENT;
-      tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &volume_down, 2);
-      has_consumer_key = true;
-    }
-    else
-    {
-      // send empty key report (release key) if previously has key pressed
-      uint16_t empty_key = 0;
-      if (has_consumer_key)
-        tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &empty_key, 2);
-      has_consumer_key = false;
-    }
-  }
-  break;
-
-  case REPORT_ID_GAMEPAD:
-  {
-    // use to avoid send multiple consecutive zero report for keyboard
-    static bool has_gamepad_key = false;
-
-    hid_gamepad_report_t report =
-        {
-            .x = 0, .y = 0, .z = 0, .rz = 0, .rx = 0, .ry = 0, .hat = 0, .buttons = 0};
-
-    if (btn)
-    {
-      report.hat = GAMEPAD_HAT_UP;
-      report.buttons = GAMEPAD_BUTTON_A;
-      tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
-
-      has_gamepad_key = true;
-    }
-    else
-    {
-      report.hat = GAMEPAD_HAT_CENTERED;
-      report.buttons = 0;
-      if (has_gamepad_key)
-        tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
-      has_gamepad_key = false;
-    }
-  }
-  break;
-
-  default:
-    break;
-  }
+  // send mouse report data
+  tud_hid_mouse_report(REPORT_ID_MOUSE, 0x00, delta_x, delta_y, 0, 0);
 }
 
 // Every 10ms, we will sent 1 report for each HID profile (keyboard, mouse etc ..)
@@ -291,10 +219,8 @@ void hid_task(void)
     return; // not enough time
   start_ms += interval_ms;
 
-  uint32_t const btn = board_button_read();
-
   // Remote wakeup
-  if (tud_suspended() && btn)
+  if (tud_suspended())
   {
     // Wake up host if we are in suspend mode
     // and REMOTE_WAKEUP feature is enabled by host
@@ -303,7 +229,7 @@ void hid_task(void)
   else
   {
     // Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
-    send_hid_report(REPORT_ID_MOUSE, btn);
+    send_hid_report(REPORT_ID_MOUSE, board_button_read());
   }
 }
 
