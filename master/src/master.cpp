@@ -2,11 +2,31 @@
 #include <stdio.h>
 #include "../libraries/SPIMaster.h"
 
+#define RESCAN_BUTTON_PIN 28
+
+/* Globals */
+volatile bool rescan = false;
+volatile unsigned long time = to_ms_since_boot(get_absolute_time());
+const int delay = 50; // Rescan button debounce delay
+
 typedef enum {
     NOT_CONNECTED,
     BUTTON_MODULE,
     JOYSTICK_MODULE
 } moduleID_t;
+
+void rescan_callback(uint gpio, uint32_t events)
+{
+    if((to_ms_since_boot(get_absolute_time()) - time) > delay && !rescan)
+    {
+        
+        time = to_ms_since_boot(get_absolute_time());
+
+        printf("Triggering a rescan...\n");
+
+        rescan = true;
+    }
+}
 
 void printbuf(uint8_t buf[], size_t len)
 {
@@ -24,64 +44,85 @@ void printbuf(uint8_t buf[], size_t len)
     }
 }
 
+void rescan_modules(SPIMaster &master)
+{
+    printf("Identifying Modules...\n");
+    printf("======================\n");
+
+    for(uint8_t module = 0; module < MAX_MODULES; module++)
+    {
+        // Select the current (potentially connected) module
+        master.SlaveSelect(module);
+
+        // Attempt to identify module currently selected
+        uint8_t identification = master.MasterIdentify();
+
+        printf("Module %u is identified as %u\n", module, identification);
+    }
+
+    rescan = false;
+}
+
+void init_gpio()
+{
+    // Initialize GPIO pins for CSNs
+    for(uint8_t pin = CSN_START_PIN; pin <= CSN_END_PIN; pin++)
+    {
+        gpio_init(pin);
+        gpio_set_dir(pin, true);
+        gpio_set_pulls(pin, false, false);
+        gpio_put(pin, 1);
+    }
+
+    // Initialize GPIO pin for rescan button
+    gpio_init(RESCAN_BUTTON_PIN);
+    gpio_set_dir(RESCAN_BUTTON_PIN, false);
+    gpio_set_pulls(RESCAN_BUTTON_PIN, false, false);
+
+    // Setup the rescan callback
+    gpio_set_irq_enabled_with_callback(
+        RESCAN_BUTTON_PIN,
+        GPIO_IRQ_EDGE_RISE,
+        true,
+        &rescan_callback
+    );
+}
+
 int main() {
     stdio_init_all();
 
     printf("SPI Master\n");
+
+    // Sleep for module initialization
+    sleep_ms(10000);
 
     SPIMaster master(
         spi_default,
         SPI_TX_PIN,
         SPI_RX_PIN,
         SPI_SCK_PIN,
-        SPI_CSN_PIN
+        SPI_CSN_PIN,
+        false
     );
 
     master.MasterInit();
 
-    // Initialize GPIO pins for CSN decoder
-    gpio_init(13);
-    gpio_set_dir(13, true);
-    gpio_set_pulls(13, false, false);
-    gpio_put(13, 0);
-    
-    gpio_init(14);
-    gpio_set_dir(14, true);
-    gpio_set_pulls(14, false, false);
-    gpio_put(14, 0);
-
-    gpio_init(15);
-    gpio_set_dir(15, true);
-    gpio_set_pulls(15, false, false);
-    gpio_put(15, 0);
+    // Initialize all GPIO
+    init_gpio();
 
     // Declare and initialize buffers
     uint8_t out_buf[BUF_LEN];
     uint8_t in_buf[BUF_LEN];
     
-    //const float conversion_factor = 3.3f / (1 << 12);
-    sleep_ms(10000);
-    printf("Identifying Modules...");
-        gpio_put(13, 0);
-        gpio_put(14, 1);  
-
-        uint8_t module1 = master.MasterIdentify();
-
-        printf("Module 1 is Identified as %u\n", module1);
-        gpio_put(13, 1);
-        gpio_put(14, 1);
-
-        gpio_put(13, 1);
-        gpio_put(14, 0);  
-
-        uint8_t module2 = master.MasterIdentify();
-        
-        printf("Module 2 is Identified as %u\n", module2);
-        gpio_put(13, 1);
-        gpio_put(14, 1);
-
+    // Initial rescan
+    rescan_modules(master);
 
     while(true) {
+        if(rescan)
+        {
+            rescan_modules(master);
+        }
+
         // Select the button module, read module data, and print
         //master.SlaveSelect(0);
         gpio_put(13, 0);

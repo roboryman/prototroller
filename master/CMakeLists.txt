@@ -1,13 +1,13 @@
-add_executable(spi-master)
+add_executable(master)
 
-pico_enable_stdio_usb(spi-master 1)
+pico_enable_stdio_usb(master 1)
 
-target_sources(spi-master PRIVATE
+target_sources(master PRIVATE
     libraries/SPIMaster.cpp
-    src/spi-master.cpp
+    src/master.cpp
 )
 
-target_link_libraries(spi-master PRIVATE
+target_link_libraries(master PRIVATE
     pico_stdlib 
     hardware_gpio
     hardware_clocks
@@ -16,4 +16,4 @@ target_link_libraries(spi-master PRIVATE
     hardware_i2c
 )
 
-pico_add_extra_outputs(spi-master)
+pico_add_extra_outputs(master)
