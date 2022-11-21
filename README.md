@@ -14,15 +14,15 @@ suited to be a general controller.
 << To Be Added: Protogrid, Host, Master, Modules, Architecture, Misc. Technicals >>
 
 ## Building
-
 1. Ensure the pico-sdk is installed alongside the TLD.
 2. Make and cd into a build directory, and export the Pico SDK path:
     ```
+    $ cd prototroller
     $ mkdir build
     $ cd build
     $ export PICO_SDK_PATH=...
     ```
-3. Generate the build files. For boards other than the Pico, use the -DPICO_BOARD=... flag.
+3. Generate the build files. For boards other than the Pico, use the -DPICO_BOARD=... flag. We do not guarantee functionality on boards other than the Pico at this time, due to different pinouts.
     ```
     $ cmake ..
     ```
@@ -33,7 +33,7 @@ suited to be a general controller.
 
 - [x] Proof of Concept Build (Nov. 01, 2022)
 - [x] Basic Master/Module Firmware (Nov. 22, 2022)
-- [ ] Basic Host HID Drivers (Nov. 22, 2022)
+- [x] Basic Host HID Drivers (Nov. 22, 2022)
 - [x] Basic Component Support (Nov. 22, 2022)
 - [x] Prototype Build (Nov. 22, 2022)
 - [ ] Advanced Firmware (Feb. 01, 2023)
