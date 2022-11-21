@@ -66,7 +66,8 @@ int main() {
     uint8_t in_buf[BUF_LEN] = {0};
 
     printf("Module buffers initialized.\n");
-
+    printf("Wait for ID\n");
+    spi.SlaveWrite(out_buf,in_buf,BUF_LEN);
     // After identifier is sent, continually send the GPIO state
     while(true)
     {
@@ -79,15 +80,15 @@ int main() {
             out_buf[i] = button_state;
         }
 
-        printf("(DEBUG) Outbut buffer set to button state\n");
+        //printf("(DEBUG) Outbut buffer set to button state\n");
 
-        printf( button_state ? "Not Pressed\n" : "Pressed\n");
+        //printf( button_state ? "Not Pressed\n" : "Pressed\n");
 
         if(spi.SlaveWrite(out_buf, in_buf, BUF_LEN)) {
-            printf("Slave Write Executed\n");
+            //printf("Slave Write Executed\n");
         }
         else {
-            printf("Slave Write FAILED\n");
+            //printf("Slave Write FAILED\n");
         }
     }
 

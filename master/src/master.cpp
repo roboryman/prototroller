@@ -31,7 +31,7 @@ static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
 
 int8_t delta_x;
 int8_t delta_y;
-
+uint8_t buttons;
 void led_blinking_task(void);
 void hid_task(void);
 
@@ -84,20 +84,20 @@ void rescan_modules(bool log)
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
         // Select the current (potentially connected) module
-        //master.SlaveSelect(module);
+        master.SlaveSelect(module);
 
-        if(module == 1)
-        {
-            gpio_put(14, 0);
-        }
+        // if(module == 1)
+        // {
+        //     gpio_put(14, 0);
+        // }
         
         sleep_us(100);
 
         // Attempt to identify module currently selected
         moduleID_t identification = (moduleID_t) master.MasterIdentify();
 
-        //master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
-        gpio_put(14, 1);
+        master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
+        //gpio_put(14, 1);
 
         // Update the module identification
         module_IDs[module] = identification;
@@ -149,7 +149,8 @@ void modules_task()
         {
             rescan_modules(true);
         }
-
+        uint8_t buttonIndex = 0;
+        buttons = 0;
         for(uint8_t module = 0; module < MAX_MODULES; module++)
         {
             if(module_IDs[module])
@@ -160,8 +161,8 @@ void modules_task()
                 // ... TBD
 
                 // Select the module
-                //master.SlaveSelect(module);
-                gpio_put(14, 0);
+                master.SlaveSelect(module);
+                //gpio_put(14, 0);
 
                 sleep_us(100);
 
@@ -169,16 +170,20 @@ void modules_task()
                 master.MasterRead(out_buf, in_buf, BUF_LEN);
 
                 // Deselect the module
-                //master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
-                gpio_put(14, 1);
+                master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
+                //gpio_put(14, 1);
 
                 // Process module output from in_buf
                 switch(module_IDs[module])
                 {
                     case BUTTON_MODULE:
                         //printbuf(in_buf, BUF_LEN);
-
+                        if(in_buf[0] == 0x00){
+                            buttons = (1 << buttonIndex); 
+                        }
+                        buttonIndex += 1;
                         printf("Button: %d\n", in_buf[0]);
+                        printf("Button Mask: %d\n", buttons);
 
                         break;
                     
@@ -378,7 +383,7 @@ void hid_task(void)
         // Format and send HID report data
 
         // Mouse (from joystick)
-        tud_hid_mouse_report(REPORT_ID_MOUSE, 0x00, delta_x, delta_y, 0, 0);
+        tud_hid_mouse_report(REPORT_ID_MOUSE, buttons, delta_x, delta_y, 0, 0);
     }
 }
 
