@@ -70,6 +70,7 @@ bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
         gpio_set_oeover(TXPin, GPIO_OVERRIDE_NORMAL);
         buf[0] = 0;
         buf[0] = ID;
+        
         //Write Identifier 
         spi_write_blocking(spi, buf, 1);
 

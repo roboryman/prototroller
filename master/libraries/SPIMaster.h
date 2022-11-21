@@ -19,7 +19,7 @@
 
 //-- Slave Selection --//
 #define MAX_MODULES 25
-#define NO_SLAVE_SELECTED_CSN 7
+#define NO_SLAVE_SELECTED_CSN 2
 
 //-- Handshake Identifiers --//
 #define PLEASE_IDENTIFY 0xAA

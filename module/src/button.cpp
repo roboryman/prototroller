@@ -8,6 +8,8 @@
 #define BUTTON_PIN 15
 
 int main() {
+    //board_init();
+
     Component button;
     SPISlave spi(
         spi_default,
@@ -23,8 +25,6 @@ int main() {
     //{
         stdio_init_all();
     //}
-
-    sleep_ms(10000);
 
     printf("BUTTON MODULE\n");
 

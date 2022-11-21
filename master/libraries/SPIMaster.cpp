@@ -33,14 +33,35 @@ void SPIMaster::MasterRead(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 {
     uint8_t buf[1] = {DATA_REQUEST};
 
-    //Write Data Request Handshake
+    // Write Data Request Handshake
     spi_write_blocking(spi, buf, 1);
 
-    //Wait for Slave to assume control of the TX line
+    // Wait for Slave to assume control of the TX line
     sleep_us(WAIT_FOR_SLAVE_US);
 
-    //Read Data
+    // Read Data
     spi_write_read_blocking(spi, out_buf, in_buf, len);
+}
+
+/* MasterIdentify
+ * Args: None
+ * Description: Send Identification Handshake, Return Response Byte
+ */
+uint8_t SPIMaster::MasterIdentify()
+{
+    uint8_t buf[1] = {PLEASE_IDENTIFY};
+
+    // Write Identification Request Handshake
+    spi_write_blocking(spi, buf, 1);
+
+    // Wait for Slave to assume control of the TX line
+    sleep_us(WAIT_FOR_SLAVE_US);
+
+    // Read Identification response
+    spi_read_blocking(spi, 0x07, buf, 1);
+    
+    // Return identification response
+    return(buf[0]);
 }
 
 /* MasterRead
@@ -82,25 +103,7 @@ void SPIMaster::SlaveSelect(uint8_t CSN)
             gpio_put(pin, 0xFE & (CSN >> (pin - CSN_START_PIN)));
         }
     }
-}
 
-/* MasterIdentify
- * Args: None
- * Description: Send Identification Handshake, Return Response Byte
- */
-uint8_t SPIMaster::MasterIdentify()
-{
-    uint8_t buf[1] = {PLEASE_IDENTIFY};
-
-    // Write Identification Request Handshake
-    spi_write_blocking(spi, buf, 1);
-
-    // Wait for Slave to assume control of the TX line
+    // Wait for slave to enter callback
     sleep_us(WAIT_FOR_SLAVE_US);
-
-    // Read Data
-    spi_read_blocking(spi,0x07,buf, 1);
-    
-    // Return identification response
-    return(buf[0]);
 }
