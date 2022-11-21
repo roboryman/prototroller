@@ -18,21 +18,24 @@ suited to be a general controller.
 1. Ensure the pico-sdk is installed alongside the TLD.
 2. Make and cd into a build directory, and export the Pico SDK path:
     ```
-    export PICO_SDK_PATH=...
+    $ mkdir build
+    $ cd build
+    $ export PICO_SDK_PATH=...
     ```
 3. Generate the build files. For boards other than the Pico, use the -DPICO_BOARD=... flag.
     ```
-    cmake ..
+    $ cmake ..
     ```
 4. Build all targets by running `make`. To build only host, master, or module targets, cd into the respective directory and run `make`.
+5. This will generate `.uf2` files for the master Pico board and each module, which can be flashed onto the Pico boards.
 
 ## Roadmap
 
 - [x] Proof of Concept Build (Nov. 01, 2022)
-- [ ] Basic Master/Module Firmware (Nov. 22, 2022)
+- [x] Basic Master/Module Firmware (Nov. 22, 2022)
 - [ ] Basic Host HID Drivers (Nov. 22, 2022)
-- [ ] Basic Component Support (Nov. 22, 2022)
-- [ ] Prototype Build (Nov. 22, 2022)
+- [x] Basic Component Support (Nov. 22, 2022)
+- [x] Prototype Build (Nov. 22, 2022)
 - [ ] Advanced Firmware (Feb. 01, 2023)
 - [ ] Advanced HID Drivers (Feb. 01, 2023)
 - [ ] Advanced Component Support (Feb. 01, 2023)
