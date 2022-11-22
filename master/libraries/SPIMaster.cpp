@@ -9,6 +9,7 @@ SPIMaster::SPIMaster(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint 
     this->CSNPin = CSNPin;
     this->externalDecoder = externalDecoder;
 }
+
 /* MasterInit
  * Args: None
  * Description: Initialize the SPI instance using provided values
@@ -27,7 +28,7 @@ void SPIMaster::MasterInit()
 }
 
 /* MasterRead
- * Args: 
+ * Args: output buffer, input buffer, length of buffers
  * Description: Send Data Request Handshake, Read Entire Data Buffer after brief delay
  */
 void SPIMaster::MasterRead(uint8_t *out_buf, uint8_t *in_buf, size_t len)

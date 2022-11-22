@@ -10,6 +10,7 @@
 #define MOUSE_SENS 5
 #define RESCAN_BUTTON_PIN 28
 
+/* Enumerations */
 enum
 {
   BLINK_NOT_MOUNTED = 250,
@@ -23,18 +24,31 @@ typedef enum {
     JOYSTICK_MODULE
 } moduleID_t;
 
-/* Globals */
+const char module_names[][20] =
+    {
+        "NOT CONNECTED",
+        "BUTTON MODULE",
+        "JOYSTICK MODULE"
+    };
+
+/* Rescan debouncing */
 volatile bool rescan = false;
 volatile unsigned long time = to_ms_since_boot(get_absolute_time());
 const int delay = 50; // Rescan button debounce delay
+
+/* TinyUSB mounted blink interval */
 static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
 
+/* Data holders for main app => TinyUSB */
 int8_t delta_x;
 int8_t delta_y;
 uint8_t buttons;
+
+/* Prototypes */
 void led_blinking_task(void);
 void hid_task(void);
 
+/* SPI Master */
 SPIMaster master(
         spi_default,
         SPI_TX_PIN,
@@ -44,25 +58,39 @@ SPIMaster master(
         false
     );
 
-// Declare and initialize buffers
+/* Buffers */
 uint8_t out_buf[BUF_LEN];
 uint8_t in_buf[BUF_LEN];
 
+/* Module state data store */
 moduleID_t module_IDs[MAX_MODULES] = {NOT_CONNECTED};
 
+
+/* rescan_callback
+ * Args: gpio, events
+ * Description: Interrupt for the rescan button.
+ * Sets the rescan flag so a rescan is executed on the next
+ * modules_task() call.
+ * Debounced to the value of delay.
+ */
 void rescan_callback(uint gpio, uint32_t events)
 {
     if((to_ms_since_boot(get_absolute_time()) - time) > delay && !rescan)
     {
-        
+        // Set the interrupt time
         time = to_ms_since_boot(get_absolute_time());
 
-        printf("Triggering a rescan...\n");
-
+        // Set the rescan flag
         rescan = true;
     }
 }
 
+/* printbuf
+ * Args: buffer to print, length of buffer
+ * Description: Prints a buffer.
+ * WARNING: THIS WILL IMPACT SPI OPERATION ON THE SLAVE.
+ * PROBABLY THE MASTER TOO.
+ */
 void printbuf(uint8_t buf[], size_t len)
 {
     int i;
@@ -79,36 +107,37 @@ void printbuf(uint8_t buf[], size_t len)
     }
 }
 
-void rescan_modules(bool log)
+/* rescan_modules
+ * Args: None
+ * Description: Rescan the protogrid for active modules.
+ * Update the module identification to not connected
+ * or a unique module specifier.
+ */
+void rescan_modules()
 {
+    printf("[!] Rescanning for active modules...\n");
+
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
         // Select the current (potentially connected) module
         master.SlaveSelect(module);
-        
-        sleep_us(100);
 
         // Attempt to identify module currently selected
         moduleID_t identification = (moduleID_t) master.MasterIdentify();
 
+        // Deselect the module
         master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
 
         // Update the module identification
         module_IDs[module] = identification;
 
-        if(log)
-        {
-            if(identification != NOT_CONNECTED)
-            {
-                printf("[!] Module %u is identified as %u\n", module, identification);
-            }
-            else
-            {
-                printf("[x] Module %u is identified as NOT CONNECTED.\n", module);
-            }
-        }
+        char status = (identification == NOT_CONNECTED) ? 'x' : '!';
+        printf("[%c] Module %u is identified as ", status, module);
+        printf(module_names[identification]);
+        printf(".\n");
     }
 
+    // Rescan finished, so reset the flag
     rescan = false;
 }
 
@@ -139,49 +168,49 @@ void init_gpio()
 
 void modules_task()
 {
-        if(rescan)
+    if(rescan)
+    {
+        rescan_modules();
+    }
+    
+    uint8_t buttonIndex = 0;
+    buttons = 0;
+    for(uint8_t module = 0; module < MAX_MODULES; module++)
+    {
+        if(module_IDs[module])
         {
-            rescan_modules(true);
-        }
-        uint8_t buttonIndex = 0;
-        buttons = 0;
-        for(uint8_t module = 0; module < MAX_MODULES; module++)
-        {
-            if(module_IDs[module])
+            // Current module is connected.
+
+            // Process module input into out_buf
+            // ... TBD
+
+            // Select the module
+            master.SlaveSelect(module);
+
+            // Read module data
+            master.MasterRead(out_buf, in_buf, BUF_LEN);
+
+            // Deselect the module
+            master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
+
+            // Process module output from in_buf
+            switch(module_IDs[module])
             {
-                // Current module is connected.
-
-                // Process module input into out_buf
-                // ... TBD
-
-                // Select the module
-                master.SlaveSelect(module);
-                //gpio_put(14, 0);
-
-                sleep_us(100);
-
-                // Read module data
-                master.MasterRead(out_buf, in_buf, BUF_LEN);
-
-                // Deselect the module
-                master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
-                //gpio_put(14, 1);
-
-                // Process module output from in_buf
-                switch(module_IDs[module])
-                {
-                    case BUTTON_MODULE:
+                case BUTTON_MODULE:
+                    {
                         //printbuf(in_buf, BUF_LEN);
-                        if(in_buf[0] == 0x00){
+                        if(in_buf[0] == 0x00) {
                             buttons = (1 << buttonIndex); 
                         }
                         buttonIndex += 1;
                         printf("Button: %d\n", in_buf[0]);
                         printf("Button Mask: %d\n", buttons);
+                    }
 
-                        break;
-                    
-                    case JOYSTICK_MODULE:
+                    break;
+                
+                case JOYSTICK_MODULE:
+                    {
                         uint16_t x = (in_buf[1] << 8) | in_buf[0];
                         uint16_t y = (in_buf[3] << 8) | in_buf[2];
 
@@ -193,19 +222,22 @@ void modules_task()
 
                         printf("Delta X: %d\n", delta_x);
                         printf("Delta Y: %d\n\n", delta_y);
+                    }
+                    break;
 
-                        break;
+                default:
+                    // Remove from data store ...?
+                    printf("Unknown module: ");
+                    printf(module_names[module_IDs[module]]);
+                    printf("\n");
 
-                    // default:
-                    //     printf("Unknown module: %u", module_IDs[module]);
-
-                    //     break;
-                }
-
-                // Need this... interesting.
-                //sleep_ms(10);
+                    break;
             }
+
+            // If spi is acting up... uncomment
+            //sleep_ms(10);
         }
+    }
 }
 
 int main() {
@@ -235,7 +267,7 @@ int main() {
     printf("[!] Master GPIO Initialized\n");
 
     // Initial rescan
-    rescan_modules(true);
+    rescan_modules();
 
     //sleep_ms(5000);
     
