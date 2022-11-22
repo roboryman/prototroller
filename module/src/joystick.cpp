@@ -23,60 +23,55 @@ SPISlave spi(
 uint8_t out_buf[BUF_LEN] = {0};
 uint8_t in_buf[BUF_LEN] = {0};
 
-uint8_t out_buf_1[BUF_LEN] = {0x77};
-uint8_t in_buf_1[BUF_LEN] = {0x77};
+// uint8_t out_buf_1[BUF_LEN] = {0x77};
+// uint8_t in_buf_1[BUF_LEN] = {0x77};
 
-volatile bool buf_flag = false;
+// volatile bool buf_flag = false;
 
-void selected_callback(uint gpio, uint32_t events)
-{
-    printf("Entered callback\n");
-    if(buf_flag)
-    {
-        if(spi.SlaveWrite(out_buf, in_buf, BUF_LEN)) {
-            //printf("Slave Write Executed\n");
-        }
-        else {
-            //printf("Slave Write FAILED\n");
-        }
-    }
-    else
-    {
-        if(spi.SlaveWrite(out_buf_1, in_buf_1, BUF_LEN)) {
-            //printf("Slave Write Executed (1)\n");
-        }
-        else {
-            //printf("Slave Write FAILED (1)\n");
-        }
-    }
-    printf("Leaving callback\n");
+// TODO: Figure out why this callback is screwing up!
+// void selected_callback(uint gpio, uint32_t events)
+// {
+//     printf("Entered callback\n");
+//     if(buf_flag)
+//     {
+//         if(spi.SlaveWrite(out_buf, in_buf, BUF_LEN)) {
+//             //printf("Slave Write Executed\n");
+//         }
+//         else {
+//             //printf("Slave Write FAILED\n");
+//         }
+//     }
+//     else
+//     {
+//         if(spi.SlaveWrite(out_buf_1, in_buf_1, BUF_LEN)) {
+//             //printf("Slave Write Executed (1)\n");
+//         }
+//         else {
+//             //printf("Slave Write FAILED (1)\n");
+//         }
+//     }
+//     printf("Leaving callback\n");
 
-    //gpio_set_irq_enabled(SPI_CSN_PIN, GPIO_IRQ_EDGE_FALL, false);
-    irq_clear(IO_IRQ_BANK0);
+//     //gpio_set_irq_enabled(SPI_CSN_PIN, GPIO_IRQ_EDGE_FALL, false);
+//     irq_clear(IO_IRQ_BANK0);
 
-    while(!gpio_get(SPI_CSN_PIN));
-}
+//     while(!gpio_get(SPI_CSN_PIN));
+// }
 
 int main() {
     //board_init();
 
-    
+    //stdio_init_all();
 
-    // Initialize logging if enabled
-    //if(LOGGING)
-    //{
-        stdio_init_all();
-    //}
-
-    printf("Joystick Module");
+    printf("JOYSTICK MODULE\n");
 
     // Setup the chip select callback
-    gpio_set_irq_enabled_with_callback(
-        SPI_CSN_PIN,
-        GPIO_IRQ_EDGE_FALL,
-        false,
-        &selected_callback
-    );
+    // gpio_set_irq_enabled_with_callback(
+    //     SPI_CSN_PIN,
+    //     GPIO_IRQ_EDGE_FALL,
+    //     false,
+    //     &selected_callback
+    // );
 
     // Emable SPI0 at 1 MHz and connect to GPIOs
     spi.SlaveInit();
@@ -90,9 +85,10 @@ int main() {
 
     printf("ADC initialized.\n");
 
-    // After identifier is sent, continually send the GPIO state
-    printf("Wait for ID. \n");
+    printf("Wait for ID.\n");
     spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+
+    // After identifier is sent, continually send the GPIO state
     while(true)
     {
         // Read the X-axis by starting an ADC conversion
@@ -103,7 +99,7 @@ int main() {
         adc_select_input(1); // Select ADC1 (y)
         uint16_t y = adc_read();
         
-        buf_flag = false;
+        // buf_flag = false;
 
         // Load the joystick data into the buffer (xLSB, xMSB, yLSB, yMSB)
         out_buf[0] = x;
@@ -114,26 +110,25 @@ int main() {
         // DEBUG - Set ALL buffer data to the 4-byte joystick data
         for(uint16_t i = 0; i < BUF_LEN; i += 4)
         {
-            // May need a semaphore
             out_buf[i]   = x;
             out_buf[i+1] = (x >> 8);
             out_buf[i+2] = y;
             out_buf[i+3] = (y >> 8);
         }
 
-        buf_flag = true;
-
-        //printf("(DEBUG) Outbut buffer set to button state\n");
+        // buf_flag = true;
 
         //printf("X : %i\n", x);
         //printf("Y : %i\n", y);
 
-        if(spi.SlaveWrite(out_buf, in_buf, BUF_LEN)) {
-            //printf("Slave Write Executed\n");
-        }
-        //else {
-            //printf("Slave Write FAILED\n");
-        //}
+        spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+
+        // if(spi.SlaveWrite(out_buf, in_buf, BUF_LEN)) {
+        //     printf("Slave Write Executed\n");
+        // }
+        // else {
+        //     printf("Slave Write FAILED\n");
+        // }
     }
 
 }
