@@ -38,18 +38,20 @@ void SPISlave::SlaveInit()
 /* SlaveWrite
  * Args: data buffer (uint8_t *), data buffer size (size_t)
  * Description: Write buffer data over the appropriate SPI module.
- *              If the master is requesting identification, return true.
+ *              If the master requested data or identification, return true.
  *              Otherwise, return false.
  */
 bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 {
+    // Set the last output buffer byte to the verify byte
+    out_buf[len-1] = (uint8_t) VERIFY_BYTE;
 
     uint8_t buf[1];
 
     // Block until the master sends ready to write signal
     spi_read_blocking(spi, 0x09, buf, 1);
     
-    //Data Read Handshake
+    // Data Read Handshake
     if(buf[0] == DATA_REQUEST)
     {
         // Take control of TX line
@@ -63,7 +65,7 @@ bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 
         return true;
     }
-    //Identification Handshake
+    // Identification Handshake
     if(buf[0] == PLEASE_IDENTIFY)
     {
         // Take control of TX line
@@ -82,17 +84,3 @@ bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 
     return false;
 }
-
-/* SlaveWriteIdentifier
- * Args: module identifier (uint8_t)
- * Description: Write the module identifier over the appropriate SPI module.
- */
-// void SPISlave::SlaveWriteIdentifier(uint8_t identifier) {
-//     outBuf[0] = identifier;
-
-//     if(SPIInst) {
-//         spi_write_read_blocking(spi1, outBuf, inBuf, BUF_LEN);
-//     } else {
-//         spi_write_read_blocking(spi0, outBuf, inBuf, BUF_LEN);
-//     }
-// }

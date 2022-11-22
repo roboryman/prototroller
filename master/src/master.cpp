@@ -19,14 +19,14 @@ enum
 };
 
 typedef enum {
-    NOT_CONNECTED,
+    DISCONNECTED,
     BUTTON_MODULE,
     JOYSTICK_MODULE
 } moduleID_t;
 
 const char module_names[][20] =
     {
-        "NOT CONNECTED",
+        "DISCONNECTED",
         "BUTTON MODULE",
         "JOYSTICK MODULE"
     };
@@ -63,7 +63,7 @@ uint8_t out_buf[BUF_LEN];
 uint8_t in_buf[BUF_LEN];
 
 /* Module state data store */
-moduleID_t module_IDs[MAX_MODULES] = {NOT_CONNECTED};
+moduleID_t module_IDs[MAX_MODULES] = {DISCONNECTED};
 
 
 /* rescan_callback
@@ -110,7 +110,7 @@ void printbuf(uint8_t buf[], size_t len)
 /* rescan_modules
  * Args: None
  * Description: Rescan the protogrid for active modules.
- * Update the module identification to not connected
+ * Update the module identification to disconnected
  * or a unique module specifier.
  */
 void rescan_modules()
@@ -131,7 +131,7 @@ void rescan_modules()
         // Update the module identification
         module_IDs[module] = identification;
 
-        char status = (identification == NOT_CONNECTED) ? 'x' : '!';
+        char status = (identification == DISCONNECTED) ? 'x' : '!';
         printf("[%c] Module %u is identified as ", status, module);
         printf(module_names[identification]);
         printf(".\n");
@@ -188,7 +188,13 @@ void modules_task()
             master.SlaveSelect(module);
 
             // Read module data
-            master.MasterRead(out_buf, in_buf, BUF_LEN);
+            bool valid = master.MasterRead(out_buf, in_buf, BUF_LEN);
+
+            // If read is invalid, set the module as disconnected
+            if(!valid)
+            {
+                module_IDs[module] = DISCONNECTED;
+            }
 
             // Deselect the module
             master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
@@ -223,10 +229,10 @@ void modules_task()
                         printf("Delta X: %d\n", delta_x);
                         printf("Delta Y: %d\n\n", delta_y);
                     }
+
                     break;
 
                 default:
-                    // Remove from data store ...?
                     printf("Unknown module: ");
                     printf(module_names[module_IDs[module]]);
                     printf("\n");

@@ -12,16 +12,17 @@
 #define SPI_RX_PIN  16
 
 //-- SPI Format --//
-#define BAUD_RATE 1000*1000
-#define BUF_LEN 0x100
+#define BAUD_RATE   1000*1000
+#define BUF_LEN     0x100
 
 //-- Handshake Identifiers --//
 #define PLEASE_IDENTIFY 0xAA
-#define DATA_REQUEST 0xBB
+#define DATA_REQUEST    0xBB
 
 //-- Module Identifiers --//
-#define BUTTON_IDENTITY 0x01
-#define JOYSTICK_IDENTITY 0x02
+#define VERIFY_BYTE         0x55
+#define BUTTON_IDENTITY     0x01
+#define JOYSTICK_IDENTITY   0x02
 
 class SPISlave
 {

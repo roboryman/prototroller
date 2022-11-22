@@ -31,7 +31,7 @@ void SPIMaster::MasterInit()
  * Args: output buffer, input buffer, length of buffers
  * Description: Send Data Request Handshake, Read Entire Data Buffer after brief delay
  */
-void SPIMaster::MasterRead(uint8_t *out_buf, uint8_t *in_buf, size_t len)
+bool SPIMaster::MasterRead(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 {
     uint8_t buf[1] = {DATA_REQUEST};
 
@@ -43,6 +43,11 @@ void SPIMaster::MasterRead(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 
     // Read Data
     spi_write_read_blocking(spi, out_buf, in_buf, len);
+
+    // Return if valid data is received
+    // If module is disconnected, the line would always read 0x00, ...,
+    // So best to use a verify value such as 0xAA.
+    return in_buf[len-1] == (uint8_t) VERIFY_BYTE;
 }
 
 /* MasterIdentify
