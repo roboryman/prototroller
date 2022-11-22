@@ -233,7 +233,7 @@ void modules_task()
                     break;
 
                 default:
-                    printf("Unknown module: ");
+                    printf("Module %u appears to have disconnected or is invalid: ", module);
                     printf(module_names[module_IDs[module]]);
                     printf("\n");
 
