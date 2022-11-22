@@ -25,6 +25,7 @@ void SPIMaster::MasterInit()
     gpio_set_function(SCKPin, GPIO_FUNC_SPI);
     gpio_set_function(CSNPin, GPIO_FUNC_SPI); // Comment? May not need decoder w/ with CHPA=1 (for prototype)
 }
+
 /* MasterRead
  * Args: 
  * Description: Send Data Request Handshake, Read Entire Data Buffer after brief delay

@@ -85,11 +85,6 @@ void rescan_modules(bool log)
     {
         // Select the current (potentially connected) module
         master.SlaveSelect(module);
-
-        // if(module == 1)
-        // {
-        //     gpio_put(14, 0);
-        // }
         
         sleep_us(100);
 
@@ -97,7 +92,6 @@ void rescan_modules(bool log)
         moduleID_t identification = (moduleID_t) master.MasterIdentify();
 
         master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
-        //gpio_put(14, 1);
 
         // Update the module identification
         module_IDs[module] = identification;
@@ -212,70 +206,19 @@ void modules_task()
                 //sleep_ms(10);
             }
         }
-
-        // // Select the button module, read module data, and print
-        // gpio_put(13, 0);
-        // gpio_put(14, 1);
-        // //master.SlaveSelect(0);
-        // //sleep_ms(500); // DEBUG
-        // master.MasterRead(out_buf, in_buf, BUF_LEN);
-        // //master.SlaveSelect(NO_SLAVE_SELECTED);
-        // gpio_put(13, 1);
-        // gpio_put(14, 1);
-        // //printf("BUTTON PACKET\n");
-        // //printbuf(in_buf, BUF_LEN);
-        // //printf("\n");
-        // printf("Button: %d\n", in_buf[0]);
-
-        // //sleep_ms(20);
-
-        // // Select the joystick module, read module data, and print
-        // //master.SlaveSelect(1);
-        // gpio_put(13, 1);
-        // gpio_put(14, 0);
-        // //sleep_ms(500); // DEBUG
-        // master.MasterRead(out_buf, in_buf, BUF_LEN);
-        // //master.SlaveSelect(NO_SLAVE_SELECTED);
-        // gpio_put(13, 1);
-        // gpio_put(14, 1);
-        // // printf("JOYSTICK PACKET\n");
-        // // printbuf(in_buf, BUF_LEN);
-        // // printf("\n");
-
-
-        // // calculate values for joystick x and y (range: [0, 4095])
-        // uint16_t x = (in_buf[1] << 8) | in_buf[0];
-        // uint16_t y = (in_buf[3] << 8) | in_buf[2];
-
-        // uint16_t offset = 200;
-        // //ex: 4096 >> 9 = 8 -4 = 4
-        // delta_x = ((x + offset) >> 9)-4;
-        // delta_y = ((y + offset) >> 9)-4;
-
-        // //UGLY do not look
-        // // if(x == 0 && y == 0)
-        // // {
-        // //     delta_x = 0;
-        // //     delta_y = 0;
-        // // }
-
-        // printf("Delta X: %d\n", delta_x);
-        // printf("Delta Y: %d\n\n", delta_y);
-
-        // //sleep_ms(20);
 }
 
 int main() {
+    // Sleep for module initialization and time to setup console
     sleep_ms(5000);
     
     //board_init();
     tusb_init();
 
-    //stdio_init_all();
-    stdio_usb_init();
+    //stdio_init_all(); // Use w/o TinyUSB
+    stdio_usb_init(); // Use w/ TinyUSB
 
-    // Sleep for module initialization and time to setup console
-    // NOTE: Raising this may cause the mount to fail...........
+    // NOTE: sleeps after tusb_init() appear to cause the USB mount to fail.
     //sleep_ms(5000);
 
     printf("MASTER INITIALIZATION PROCEDURE\n");
@@ -382,7 +325,7 @@ void hid_task(void)
     if (tud_hid_ready()) {
         // Format and send HID report data
 
-        // Mouse (from joystick)
+        // Mouse (from joystick and buttons)
         tud_hid_mouse_report(REPORT_ID_MOUSE, buttons, delta_x, delta_y, 0, 0);
     }
 }
