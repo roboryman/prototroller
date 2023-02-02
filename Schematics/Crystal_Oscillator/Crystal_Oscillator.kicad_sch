@@ -319,7 +319,7 @@
     (property "Value" "ABLS-12.000MHZ-B4-T" (id 1) (at 134.62 77.47 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Footprint" "" (id 2) (at 146.05 87.63 0)
+    (property "Footprint" "ABLS-12:XTAL_ABLS-12.000MHZ-B4-T" (id 2) (at 146.05 87.63 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 146.05 87.63 0)
@@ -377,7 +377,7 @@
       (reference "R?") (unit 1) (value "1k") (footprint "")
     )
     (path "/97b0fd5a-b547-4890-8ed2-40c439332b8a"
-      (reference "Y?") (unit 1) (value "ABLS-12.000MHZ-B4-T") (footprint "")
+      (reference "Y?") (unit 1) (value "ABLS-12.000MHZ-B4-T") (footprint "ABLS-12:XTAL_ABLS-12.000MHZ-B4-T")
     )
   )
 )

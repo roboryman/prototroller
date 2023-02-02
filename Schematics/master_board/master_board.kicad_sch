@@ -3959,7 +3959,7 @@
     (property "Value" "ABLS-12.000MHZ-B4-T" (id 1) (at 215.9 113.03 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Footprint" "" (id 2) (at 227.33 123.19 0)
+    (property "Footprint" "ABLS-12:XTAL_ABLS-12.000MHZ-B4-T" (id 2) (at 227.33 123.19 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 227.33 123.19 0)
@@ -4542,7 +4542,7 @@
       (reference "U?") (unit 1) (value "74HCT154PW,118") (footprint "")
     )
     (path "/c4092f23-0ff3-4aa8-b78a-c70b581328f4"
-      (reference "Y?") (unit 1) (value "ABLS-12.000MHZ-B4-T") (footprint "")
+      (reference "Y?") (unit 1) (value "ABLS-12.000MHZ-B4-T") (footprint "ABLS-12:XTAL_ABLS-12.000MHZ-B4-T")
     )
   )
 )
