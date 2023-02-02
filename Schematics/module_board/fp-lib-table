@@ -1,4 +1,4 @@
 (fp_lib_table
-  (lib (name "W25Q16JVSSIQ")(type "KiCad")(uri "C:/Users/Leo Hsieh/Downloads/W25Q16JVSSIQ")(options "")(descr ""))
-  (lib (name "ABLS-12")(type "KiCad")(uri "C:/Users/Leo Hsieh/Downloads/ABLS-12.000MHZ-B4-T")(options "")(descr ""))
+  (lib (name "W25Q16JVSSIQ")(type "KiCad")(uri "${KICAD6_FOOTPRINT_DIR}W25Q16JVSSIQ")(options "")(descr ""))
+  (lib (name "ABLS-12")(type "KiCad")(uri "${KICAD6_FOOTPRINT_DIR}ABLS-12.000MHZ-B4-T")(options "")(descr ""))
 )
