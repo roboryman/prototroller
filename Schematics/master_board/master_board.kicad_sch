@@ -3951,7 +3951,7 @@
     (uuid 85907b86-3c20-4a7d-b80b-57a92e4b78e0)
     (property "Reference" "SW2" (id 0) (at 127 175.26 0))
     (property "Value" "SW_Push" (id 1) (at 127 182.88 0))
-    (property "Footprint" "" (id 2) (at 127 175.26 0)
+    (property "Footprint" "Button_Switch_THT:Push_E-Switch_KS01Q01" (id 2) (at 127 175.26 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 127 175.26 0)
@@ -4109,7 +4109,7 @@
     (uuid a524c91f-ff5d-4073-ae0f-6cfe00c0490f)
     (property "Reference" "SW1" (id 0) (at 91.44 175.26 0))
     (property "Value" "SW_Push" (id 1) (at 91.44 182.88 0))
-    (property "Footprint" "" (id 2) (at 91.44 175.26 0)
+    (property "Footprint" "Button_Switch_THT:Push_E-Switch_KS01Q01" (id 2) (at 91.44 175.26 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 91.44 175.26 0)
@@ -4450,7 +4450,7 @@
     (uuid e0b93d9d-7fc1-466a-81e7-491989a0b279)
     (property "Reference" "SW3" (id 0) (at 162.56 175.26 0))
     (property "Value" "SW_Push" (id 1) (at 162.56 182.88 0))
-    (property "Footprint" "" (id 2) (at 162.56 175.26 0)
+    (property "Footprint" "Button_Switch_THT:Push_E-Switch_KS01Q01" (id 2) (at 162.56 175.26 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 162.56 175.26 0)
@@ -4904,13 +4904,13 @@
       (reference "R17") (unit 1) (value "1k") (footprint "Resistor_SMD:R_01005_0402Metric")
     )
     (path "/a524c91f-ff5d-4073-ae0f-6cfe00c0490f"
-      (reference "SW1") (unit 1) (value "SW_Push") (footprint "")
+      (reference "SW1") (unit 1) (value "SW_Push") (footprint "Button_Switch_THT:Push_E-Switch_KS01Q01")
     )
     (path "/85907b86-3c20-4a7d-b80b-57a92e4b78e0"
-      (reference "SW2") (unit 1) (value "SW_Push") (footprint "")
+      (reference "SW2") (unit 1) (value "SW_Push") (footprint "Button_Switch_THT:Push_E-Switch_KS01Q01")
     )
     (path "/e0b93d9d-7fc1-466a-81e7-491989a0b279"
-      (reference "SW3") (unit 1) (value "SW_Push") (footprint "")
+      (reference "SW3") (unit 1) (value "SW_Push") (footprint "Button_Switch_THT:Push_E-Switch_KS01Q01")
     )
     (path "/f0ce6264-04dc-4a7e-a059-fc852e5bd7d4"
       (reference "U1") (unit 1) (value "NCP1117-3.3_SOT223") (footprint "Package_TO_SOT_SMD:SOT-223-3_TabPin2")
