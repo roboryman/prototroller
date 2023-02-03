@@ -1774,7 +1774,7 @@
     (property "Value" "W25Q16JVSSIQ" (id 1) (at 186.69 87.63 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "W25Q16JVSSIQ:SOIC127P790X216-8N" (id 2) (at 158.75 80.01 0)
+    (property "Footprint" "Package_SO:SOIC-8_5.23x5.23mm_P1.27mm" (id 2) (at 158.75 80.01 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "" (id 3) (at 158.75 80.01 0)
@@ -2589,7 +2589,7 @@
       (reference "U1") (unit 1) (value "RP2040") (footprint "Package_DFN_QFN:QFN-56-1EP_7x7mm_P0.4mm_EP3.2x3.2mm")
     )
     (path "/216ca7a2-00a8-4a6f-813d-3ef99867e82d"
-      (reference "U2") (unit 1) (value "W25Q16JVSSIQ") (footprint "W25Q16JVSSIQ:SOIC127P790X216-8N")
+      (reference "U2") (unit 1) (value "W25Q16JVSSIQ") (footprint "Package_SO:SOIC-8_5.23x5.23mm_P1.27mm")
     )
     (path "/039132b5-d1ff-4807-8a71-1bea6b495b8f"
       (reference "Y1") (unit 1) (value "ABLS-12.000MHZ-B4-T") (footprint "ABLS-12:XTAL_ABLS-12.000MHZ-B4-T")
