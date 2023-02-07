@@ -1,4 +1,4 @@
-20900195594291706
+20905222847383519
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -87527,3 +87527,24 @@ varistor
 0
 2
 2
+prototroller_footprints
+LED_Cree-UHD111A
+http://www.newstar-ledstrip.com/product/20181119172602110.pdf
+LED RGB NeoPixel
+0
+4
+4
+prototroller_footprints
+Mag_Pogo_6P_P2.2mm_Female
+
+
+0
+6
+6
+prototroller_footprints
+Mag_Pogo_6P_P2.2mm_Male
+
+
+0
+6
+6
