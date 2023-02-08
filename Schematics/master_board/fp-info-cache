@@ -1,4 +1,4 @@
-20905222847383519
+20908574669104230
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -87548,3 +87548,17 @@ Mag_Pogo_6P_P2.2mm_Male
 0
 6
 6
+prototroller_footprints
+Switch_D6C40F1LFS
+E-Switch KS01Q01 http://spec_sheets.e-switch.com/specs/29-KS01Q01.pdf
+Push Button
+0
+4
+4
+prototroller_footprints
+XTAL_ABLS-12.000MHZ-B4-T
+
+
+0
+2
+2
