@@ -193,7 +193,7 @@
       (net 37 "/QSPI_SD3") (pinfunction "IO3") (pintype "bidirectional") (tstamp ce2c4e84-9d6f-4a81-8b2d-8ad246d39a50))
     (pad "8" smd roundrect (at 3.6 -1.905) (size 1.6 0.6) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
       (net 1 "+3V3") (pinfunction "VCC") (pintype "power_in") (tstamp f40dbbd7-5ad1-470a-aad9-63af0713f0cf))
-    (model "C:/Users/evanz/Desktop/prototroller/Schematics/models/W25Q16JVSSIQ.stp"
+    (model "$(KIPRJMOD)/../models/W25Q16JVSSIQ.stp"
       (offset (xyz 0 0 0))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
@@ -973,7 +973,7 @@
       (net 43 "Net-(C8-Pad2)") (pinfunction "1") (pintype "passive") (tstamp 9b3f2dfc-246c-4902-a428-d0e379697dc5))
     (pad "2" smd rect locked (at 4.75 0 180) (size 5.6 2.1) (layers "F.Cu" "F.Paste" "F.Mask")
       (net 15 "/XTAL_IN") (pinfunction "2") (pintype "passive") (tstamp 08f78d43-fac7-4803-abe6-2201c67b2fb5))
-    (model "C:/Users/evanz/Desktop/prototroller/Schematics/models/XTAL_ABLS_ABR.step"
+    (model "$(KIPRJMOD)/../models/XTAL_ABLS_ABR.step"
       (offset (xyz 0 0 0))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
