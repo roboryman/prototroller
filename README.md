@@ -31,18 +31,19 @@ suited to be a general controller.
 
 ## Roadmap
 
-- [x] Proof of Concept Build (Nov. 01, 2022)
-- [x] Basic Master/Module Firmware (Nov. 22, 2022)
-- [x] Basic Host HID Drivers (Nov. 22, 2022)
-- [x] Basic Component Support (Nov. 22, 2022)
-- [x] Prototype Build (Nov. 22, 2022)
-- [ ] Advanced Firmware (Feb. 01, 2023)
-- [ ] Advanced HID Drivers (Feb. 01, 2023)
-- [ ] Advanced Component Support (Feb. 01, 2023)
-- [ ] Module Board Designs (Feb. 01, 2023)
-- [ ] Module Protogrid Interconnect Design (March. 01, 2023)
-- [ ] Finalized Firmware (March 01, 2023)
-- [ ] Integrated Board Design (March 01, 2023)
+- [x] Proof of Concept Build
+- [x] Basic Master/Module Firmware
+- [x] Basic Host HID Drivers
+- [x] Basic Component Support
+- [x] Prototype Build
+- [x] Interconnect Design
+- [x] Module Board Design(s)
+- [x] Master Board Design
+- [ ] Chassis/Module Enclosure Designs (Mar. 01, 2023)
+- [ ] Advanced Firmware (Mar. 01, 2023)
+- [ ] Advanced HID Drivers (Mar. 01, 2023)
+- [ ] Advanced Component Support (Mar. 01, 2023)
+- [ ] Finalized Firmware (April 01, 2023)
 - [ ] Prototroller Artifact (April 01, 2023)
 
 ## Context
