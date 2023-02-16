@@ -1,0 +1,88 @@
+#ifndef _BOARDS_PROTOTROLLER_MASTER_H
+#define _BOARDS_PROTOTROLLER_MASTER_H
+
+// For board detection
+#define PROTOTROLLER_MASTER
+
+// --- BOARD SPECIFIC ---
+#define MASTER_LED_R_PIN 2
+#define MASTER_LED_G_PIN 3
+#define MASTER_LED_B_PIN 4
+
+#define MASTER_RUN_PIN 26
+
+#define MASTER_A0_PIN 15
+#define MASTER_A1_PIN 14
+#define MASTER_A2_PIN 13
+#define MASTER_A3_PIN 12
+
+
+// --- UART ---
+#ifndef PICO_DEFAULT_UART
+#define PICO_DEFAULT_UART 0
+#endif
+
+#ifndef PICO_DEFAULT_UART_TX_PIN
+#define PICO_DEFAULT_UART_TX_PIN 0
+#endif
+
+#ifndef PICO_DEFAULT_UART_RX_PIN
+#define PICO_DEFAULT_UART_RX_PIN 1
+#endif
+
+// --- LED ---
+// Included so basic examples will work, and set it to the green LED
+#ifndef PICO_DEFAULT_LED_PIN
+#define PICO_DEFAULT_LED_PIN MASTER_LED_G_PIN
+#endif
+// no PICO_DEFAULT_WS2812_PIN
+
+#ifndef PICO_DEFAULT_LED_PIN_INVERTED
+#define PICO_DEFAULT_LED_PIN_INVERTED 1
+#endif
+
+// --- I2C ---
+#ifndef PICO_DEFAULT_I2C
+#define PICO_DEFAULT_I2C 1
+#endif
+#ifndef PICO_DEFAULT_I2C_SDA_PIN
+#define PICO_DEFAULT_I2C_SDA_PIN 2
+#endif
+#ifndef PICO_DEFAULT_I2C_SCL_PIN
+#define PICO_DEFAULT_I2C_SCL_PIN 3
+#endif
+
+// --- SPI ---
+#ifndef PICO_DEFAULT_SPI
+#define PICO_DEFAULT_SPI 0
+#endif
+#ifndef PICO_DEFAULT_SPI_SCK_PIN
+#define PICO_DEFAULT_SPI_SCK_PIN 29
+#endif
+#ifndef PICO_DEFAULT_SPI_TX_PIN
+#define PICO_DEFAULT_SPI_TX_PIN 30
+#endif
+#ifndef PICO_DEFAULT_SPI_RX_PIN
+#define PICO_DEFAULT_SPI_RX_PIN 27
+#endif
+#ifndef PICO_DEFAULT_SPI_CSN_PIN
+#define PICO_DEFAULT_SPI_CSN_PIN 15
+#endif
+
+// --- FLASH ---
+#define PICO_BOOT_STAGE2_CHOOSE_W25Q080 1
+
+#ifndef PICO_FLASH_SPI_CLKDIV
+#define PICO_FLASH_SPI_CLKDIV 2
+#endif
+
+#ifndef PICO_FLASH_SIZE_BYTES
+#define PICO_FLASH_SIZE_BYTES (2 * 1024 * 1024)
+#endif
+
+// All boards have B1 RP2040
+#ifndef PICO_RP2040_B0_SUPPORTED
+#define PICO_RP2040_B0_SUPPORTED 0
+#endif
+
+#endif
