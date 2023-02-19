@@ -3,16 +3,76 @@
 </p>
 
 ## About
-The Prototroller ("Prototype Controller") is a valuable addition to the gaming domain
-as it makes controller modularization readily accessible for use by users and developers
-alike. It allows QoL improvements to users by allowing them to tailor their physical
-experience. Developers may rapidly prototype different controller layouts for playtesting.
-Related projects exist in spirit. The Prototroller seeks to go further, providing the
-ultimate experience as a fully modular and highly configurable controller. And while we
-(the team) target the gaming domain in our design constraints, the Prototroller is well
-suited to be a general controller.
+Modular controllers are few and far between, especially in the open-source community. We aim to change this by creating a full-stack, feature-rich, usable, responsive, and robust modular controller. The device could be used for any HID-compliant purpose, but we focus on developing swappable modules that can form customizable gamepads.
 
-<< To Be Added: Protogrid, Host, Master, Modules, Architecture, Misc. Technicals >>
+A potential use-case is QoL hardware-level remapping for the benefit of the general user.
+
+Another could be rapidly prototyping different controller layouts for games or simulations in development.
+
+In any case, we dub thy the __Prototroller__. Our team consists of 5 members:
+- Yu-yang Hsieh
+- Britton McLeavy
+- Caleb O'Malley
+- Merrick Ryman
+- Evan Zhang
+
+This project is developed in conjunction with the UF CpE Capstone program (Fall 2022 - Spring 2023). This project is self-funded. As such, donations are appreciated in this educational pursuit (hardware is not cheap nowadays!).
+
+## Hardware Architecture and Aesthetics
+At the highest abstraction our hardware consists of the following:
+- Master Board 
+- Module Boards
+- Component Interfaces
+- Enclosures
+
+### Master Board
+
+<p>
+
+<img align="left" src="assets/master_board_rev_a.jpg" width="250"/>
+
+The master board is the - you guessed it - brains of the operation. It handles the data store of connected modules, transfers and receives data with modules over SPI, transfers and receives HID data over USB with the host, rescans modules, has headers for haptic feedback, has buttons for various functions, etc. Most of the master board also serves as the <i>protogrid</i>, that is, the 4x5 grid of module slots the user can snap modules to.
+<br><br>
+At a high level, controller data flows like this: Host < == USB == > MASTER BOARD < == SPI == > MODULE BOARDS.
+
+<br clear="left"/>
+</p>
+
+Direct interfaces on the master board include buttons for rescanning, resetting, and flashing. There are header pins for interfacing with haptic feedback motors (i.e., controller vibrations). An SWD header (1.27mm) is available for debugging. Most importantly, there is a USB-C receptacle for power and data connection with the host.
+
+Connections between the <i>protogrid</i> and modules are magnetic through the use of 6-pin magnetic pogo pin connectors. These carry VCC, GND, and the SPI signals from the master board to the module board, while maintaining a solid physical connection. It is important to note the master feeds modules with 3.3V from its own LDO regulator.
+
+### Module Boards
+
+<p>
+
+<img align="right" src="assets/module_board_rev_a.png" width="250"/>
+
+The module boards are generic, no matter the component (more on that later). They are constrained at 30x30mm. These have no direct interface with the user, save for the magnetic connector and SWD headers for debugging and flashing. On the sides are pin headers, giving 10 signals to a component interface board, i.e., the "board" sitting atop the module board containing the component itself. In this way, we do not have to design a unique module board for each component, and simply offload the task to hand-making the component interface board.
+<br clear="right"/>
+</p>
+
+### Component Interface Boards
+
+<p>
+
+<img align="left" src="assets/veroboard.jpg" width="250"/>
+
+The component interface boards are simply veroboards with soldered component(s). These veroboard sits atop the module board headers. We don't use "standard" veroboard, that is, long strips of copper. Instead, we opted for a kind with a copper pad per through-hole. This way, we can freely route our signals from the module board around the veroboard. Take a joystick for example. The design would look like this: PROTOGRID < == MAG. CONNECTOR == > MASTER BOARD < == HEADERS == > COMPONENT INTERFACE BOARD < == SOLDERED COMPONENTS ==> USER I/O.
+<br clear="left"/>
+</p>
+
+### Enclosures
+
+Of course, this would not be a very comfortable controller to use without enclosures.
+
+The master board is enclosed by a chassis, with optional grips. It has a lid to hide the non-protogrid portion and also contains the haptic feedback motors.
+
+The module enclosures contain the module board and component interface boards, but do not cover the component.
+
+<p align="center">
+  <img src="assets/overall.png" width="400" align="center" />
+</p>
 
 ## Building
 1. Ensure the pico-sdk is installed alongside the TLD.
@@ -49,12 +109,7 @@ suited to be a general controller.
 ## Usage
 There are a few ways you may use the Prototroller.
 ### _Our Hardware, Our Software_
-Recommended. This combines our hardware, including:
-- Master Board
-- Modules (Module Boards + Component Interfaces)
-- Enclosures
-
-With the software to do the job.
+Recommended. This combines our hardware (listed above) with the software to do the job.
 The end result is a full-stack (HW+SW) modular controller that implements our goals and, as such, is supported.
 Our recommended PCB supplier is JLCPCB, and we are working on formalizing our recommendations for ordering.
 
@@ -66,18 +121,6 @@ If you want to develop your own hardware to use with our software, that is excel
 You may even use our designs as a starting point. For example, you may want to make the modules slightly larger.
 
 In any case, we cannot promise any help if you do this. An attempt may be made, but we have busy lives too.
-
-## Context
-Our team consists of 5 members.
-- Yu-yang Hsieh
-- Britton McLeavy
-- Caleb O'Malley
-- Merrick Ryman
-- Evan Zhang
-
-Modular controllers (and gamepads) are few and far between, especially in the open-source community. We aim to change this by creating a full-stack, feature-rich, usable, responsive, and robust modular controller.
-
-This project is developed in conjunction with the UF CpE Capstone program (Fall 2022 - Spring 2023). This project is self-funded. As such, donations are appreciated in this educational pursuit (hardware is not cheap nowadays!).
 
 ## Acknowledgements
 Thank you to our stakeholder Carsten Thue-Bludworth for his infinite wisdom. His assistance keeps the project grounded and evolving in the best way possible.
