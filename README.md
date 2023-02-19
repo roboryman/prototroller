@@ -58,7 +58,7 @@ The module boards are generic, no matter the component (more on that later). The
 
 <img align="left" src="assets/veroboard.jpg" width="250"/>
 
-The component interface boards are simply veroboards with soldered component(s). These veroboard sits atop the module board headers. We don't use "standard" veroboard, that is, long strips of copper. Instead, we opted for a kind with a copper pad per through-hole. This way, we can freely route our signals from the module board around the veroboard. Take a joystick for example. The design would look like this: PROTOGRID < == MAG. CONNECTOR == > MASTER BOARD < == HEADERS == > COMPONENT INTERFACE BOARD < == SOLDERED COMPONENTS ==> USER I/O.
+The component interface boards are simply veroboards with soldered component(s). These veroboard sits atop the module board headers. We don't use "standard" veroboard, that is, long strips of copper. Instead, we opted for a kind with a copper pad per through-hole. This way, we can freely route our signals from the module board around the veroboard. Take a joystick for example. The design would look like this: PROTOGRID < == MAG. CONNECTOR == > MODULE BOARD < == HEADERS == > COMPONENT INTERFACE BOARD < == SOLDERED COMPONENTS ==> USER I/O.
 <br clear="left"/>
 </p>
 
@@ -71,8 +71,24 @@ The master board is enclosed by a chassis, with optional grips. It has a lid to 
 The module enclosures contain the module board and component interface boards, but do not cover the component.
 
 <p align="center">
-  <img src="assets/overall.png" width="500" align="center" />
+  <img src="assets/overall.png" width="600" align="center" />
 </p>
+
+## Usage
+There are a few ways you may use the Prototroller.
+### _Our Hardware, Our Software_
+Recommended. This combines our hardware (listed above) with the software to do the job.
+The end result is a full-stack (HW+SW) modular controller that implements our goals and, as such, is supported.
+Our recommended PCB supplier is JLCPCB, and we are working on formalizing our recommendations for ordering.
+
+We cannot provide any hardware support, sorry; only software in this case.
+
+### _Your Hardware, Our Software_
+If you want to develop your own hardware to use with our software, that is excellent! In fact, we are curious to see your designs.
+
+You may even use our designs as a starting point. For example, you may want to make the modules slightly larger.
+
+In any case, we cannot promise any help if you do this. An attempt may be made, but we have busy lives too.
 
 ## Building
 1. Ensure the pico-sdk is installed alongside the TLD.
@@ -105,22 +121,6 @@ The module enclosures contain the module board and component interface boards, b
 - [ ] Advanced Component Support (Mar. 01, 2023)
 - [ ] Finalized Firmware (April 01, 2023)
 - [ ] Prototroller Artifact (April 01, 2023)
-
-## Usage
-There are a few ways you may use the Prototroller.
-### _Our Hardware, Our Software_
-Recommended. This combines our hardware (listed above) with the software to do the job.
-The end result is a full-stack (HW+SW) modular controller that implements our goals and, as such, is supported.
-Our recommended PCB supplier is JLCPCB, and we are working on formalizing our recommendations for ordering.
-
-We cannot provide any hardware support, sorry; only software in this case.
-
-### _Your Hardware, Our Software_
-If you want to develop your own hardware to use with our software, that is excellent! In fact, we are curious to see your designs.
-
-You may even use our designs as a starting point. For example, you may want to make the modules slightly larger.
-
-In any case, we cannot promise any help if you do this. An attempt may be made, but we have busy lives too.
 
 ## Acknowledgements
 Thank you to our stakeholder Carsten Thue-Bludworth for his infinite wisdom. His assistance keeps the project grounded and evolving in the best way possible.
