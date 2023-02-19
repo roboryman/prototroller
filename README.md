@@ -71,7 +71,7 @@ The master board is enclosed by a chassis, with optional grips. It has a lid to 
 The module enclosures contain the module board and component interface boards, but do not cover the component.
 
 <p align="center">
-  <img src="assets/overall.png" width="400" align="center" />
+  <img src="assets/overall.png" width="500" align="center" />
 </p>
 
 ## Building
