@@ -1,7 +1,8 @@
-! [prototroller logo] (https://raw.githubusercontent.com/roboryman/prototroller/main/assets/logo.png)
+<p align="center">
+  <img src="assets/logo.png" width="200" align="center" />
+</p>
 
 ## About
-
 The Prototroller ("Prototype Controller") is a valuable addition to the gaming domain
 as it makes controller modularization readily accessible for use by users and developers
 alike. It allows QoL improvements to users by allowing them to tailor their physical
@@ -30,7 +31,6 @@ suited to be a general controller.
 5. This will generate `.uf2` files for the master Pico board and each module, which can be flashed onto the Pico boards.
 
 ## Roadmap
-
 - [x] Proof of Concept Build
 - [x] Basic Master/Module Firmware
 - [x] Basic Host HID Drivers
@@ -47,10 +47,8 @@ suited to be a general controller.
 - [ ] Prototroller Artifact (April 01, 2023)
 
 ## Usage
-
 There are a few ways you may use the Prototroller.
-
-### Our Hardware, Our Software
+### _Our Hardware, Our Software_
 Recommended. This combines our hardware, including:
 - Master Board
 - Modules (Module Boards + Component Interfaces)
@@ -62,7 +60,7 @@ Our recommended PCB supplier is JLCPCB, and we are working on formalizing our re
 
 We cannot provide any hardware support, sorry; only software in this case.
 
-### Your Hardware, Our Software
+### _Your Hardware, Our Software_
 If you want to develop your own hardware to use with our software, that is excellent! In fact, we are curious to see your designs.
 
 You may even use our designs as a starting point. For example, you may want to make the modules slightly larger.
@@ -70,9 +68,6 @@ You may even use our designs as a starting point. For example, you may want to m
 In any case, we cannot promise any help if you do this. An attempt may be made, but we have busy lives too.
 
 ## Context
-
-<< To Be Added: Who, What, Where, Why, When, How >>
-
 Our team consists of 5 members.
 - Yu-yang Hsieh
 - Britton McLeavy
