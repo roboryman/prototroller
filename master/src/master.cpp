@@ -6,9 +6,9 @@
 #include "usb_descriptors.h"
 #include "tusb.h"
 #include "bsp/board.h"
+#include "../../prototroller.h"
 
 #define MOUSE_SENS 5
-#define RESCAN_BUTTON_PIN 28
 
 /* Enumerations */
 enum
@@ -51,10 +51,10 @@ void hid_task(void);
 /* SPI Master */
 SPIMaster master(
         spi_default,
-        SPI_TX_PIN,
-        SPI_RX_PIN,
-        SPI_SCK_PIN,
-        SPI_CSN_PIN,
+        MASTER_SPI_TX_PIN,
+        MASTER_SPI_RX_PIN,
+        MASTER_SPI_SCK_PIN,
+        MASTER_SPI_CSN_PIN,
         false
     );
 
@@ -132,6 +132,13 @@ void rescan_modules()
         module_IDs[module] = identification;
 
         char status = (identification == DISCONNECTED) ? 'x' : '!';
+
+        if(identification != DISCONNECTED)
+        {
+            gpio_put(MASTER_LED_R_PIN, 1);
+            gpio_put(MASTER_LED_G_PIN, 0);
+        }
+
         printf("[%c] Module %u is identified as ", status, module);
         printf(module_names[identification]);
         printf(".\n");
@@ -144,7 +151,7 @@ void rescan_modules()
 void init_gpio()
 {
     // Initialize GPIO pins for CSNs
-    for(uint8_t pin = CSN_START_PIN; pin <= CSN_END_PIN; pin++)
+    for(uint8_t pin = MASTER_CSN_START_PIN; pin <= MASTER_CSN_END_PIN; pin++)
     {
         gpio_init(pin);
         gpio_set_dir(pin, true);
@@ -153,13 +160,26 @@ void init_gpio()
     }
 
     // Initialize GPIO pin for rescan button
-    gpio_init(RESCAN_BUTTON_PIN);
-    gpio_set_dir(RESCAN_BUTTON_PIN, false);
-    gpio_set_pulls(RESCAN_BUTTON_PIN, false, false);
+    gpio_init(MASTER_RESCAN_PIN);
+    gpio_set_dir(MASTER_RESCAN_PIN, false);
+    gpio_set_pulls(MASTER_RESCAN_PIN, false, false);
+
+    // Initialize GPIO for LEDs
+    gpio_init(MASTER_LED_R_PIN);
+    gpio_set_dir(MASTER_LED_R_PIN, GPIO_OUT);
+    gpio_set_pulls(MASTER_RESCAN_PIN, false, false);
+
+    gpio_put(MASTER_LED_R_PIN, 0);
+
+    gpio_init(MASTER_LED_G_PIN);
+    gpio_set_dir(MASTER_LED_G_PIN, GPIO_OUT);
+    gpio_set_pulls(MASTER_RESCAN_PIN, false, false);
+
+    gpio_put(MASTER_LED_G_PIN, 1);
 
     //Setup the rescan callback
     gpio_set_irq_enabled_with_callback(
-        RESCAN_BUTTON_PIN,
+        MASTER_RESCAN_PIN,
         GPIO_IRQ_EDGE_RISE,
         true,
         &rescan_callback
@@ -172,11 +192,15 @@ void modules_task()
     {
         rescan_modules();
     }
+
+    // DEBUG ONLY!
+    //rescan_modules();
     
     uint8_t buttonIndex = 0;
     buttons = 0;
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
+        //printf("Scanning protogrid for new data...\n");
         if(module_IDs[module])
         {
             // Current module is connected.

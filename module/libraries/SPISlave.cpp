@@ -1,4 +1,5 @@
 #include "SPISlave.h"
+#include "../../prototroller.h"
 
 SPISlave::SPISlave(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CSNPin,uint8_t ID)
 {

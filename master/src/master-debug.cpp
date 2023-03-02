@@ -6,9 +6,9 @@
 #include "usb_descriptors.h"
 #include "tusb.h"
 #include "bsp/board.h"
-#include "prototroller_master.h"
+#include "../../prototroller.h"
+
 #define MOUSE_SENS 5
-#define RESCAN_BUTTON_PIN 28
 
 /* Enumerations */
 enum

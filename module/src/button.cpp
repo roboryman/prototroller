@@ -4,16 +4,15 @@
 #include "pico/binary_info.h"
 #include "../libraries/Component.h"
 #include "../libraries/SPISlave.h"
-
-#define BUTTON_PIN 15
+#include "../../prototroller.h"
 
 Component button;
 SPISlave spi(
     spi_default,
-    3,
-    4,
-    2,
-    5,
+    MODULE_SPI_TX_PIN,
+    MODULE_SPI_RX_PIN,
+    MODULE_SPI_SCK_PIN,
+    MODULE_SPI_CSN_PIN,
     BUTTON_IDENTITY
 );
 
@@ -34,9 +33,9 @@ int main() {
     printf("Slave initialized.\n");
 
     // Initialize the active-low button GPIO
-    gpio_init(BUTTON_PIN);
-    gpio_set_dir(BUTTON_PIN, GPIO_IN);
-    gpio_set_pulls(BUTTON_PIN, false, false);
+    gpio_init(MODULE_BUTTON_PIN);
+    gpio_set_dir(MODULE_BUTTON_PIN, GPIO_IN);
+    gpio_set_pulls(MODULE_BUTTON_PIN, false, false);
 
     printf("Button GPIO initialized.\n");
 
@@ -46,7 +45,7 @@ int main() {
     // After identifier is sent, continually send the GPIO state
     while(true)
     {
-        bool button_state = gpio_get(BUTTON_PIN); // Active-Low
+        bool button_state = gpio_get(MODULE_BUTTON_PIN); // Active-Low
         out_buf[0] = button_state;
 
         // DEBUG - Set ALL buffer data to the button state
