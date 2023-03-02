@@ -5,16 +5,6 @@
 #include "hardware/spi.h"
 #include "hardware/gpio.h"
 
-//-- Pin Definitions --//
-#define SPI_TX_PIN  19
-#define SPI_SCK_PIN 18
-#define SPI_CSN_PIN 17
-#define SPI_RX_PIN  16
-
-//-- SPI Format --//
-#define BAUD_RATE   1000*1000
-#define BUF_LEN     0x100
-
 //-- Handshake Identifiers --//
 #define PLEASE_IDENTIFY 0xAA
 #define DATA_REQUEST    0xBB

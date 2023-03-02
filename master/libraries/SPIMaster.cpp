@@ -1,4 +1,5 @@
 #include "SPIMaster.h"
+#include "../../prototroller.h"
 
 SPIMaster::SPIMaster(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CSNPin, bool externalDecoder)
 {
@@ -89,9 +90,9 @@ void SPIMaster::SlaveSelect(uint8_t CSN)
         // Pin 3: 0
         // Pin ...: 1
 
-        for(uint8_t pin = CSN_START_PIN; pin <= CSN_END_PIN; pin++)
+        for(uint8_t pin = MASTER_CSN_START_PIN; pin <= MASTER_CSN_END_PIN; pin++)
         {
-            gpio_put(pin, (pin - CSN_START_PIN) != CSN);
+            gpio_put(pin, (pin - MASTER_CSN_START_PIN) != CSN);
         }
     }
     else
@@ -105,9 +106,9 @@ void SPIMaster::SlaveSelect(uint8_t CSN)
         // Pin 2: 0
         // Pin ...: 0
 
-        for(uint8_t pin = CSN_START_PIN; pin <= CSN_END_PIN; pin++)
+        for(uint8_t pin = MASTER_CSN_START_PIN; pin <= MASTER_CSN_END_PIN; pin++)
         {
-            gpio_put(pin, 0xFE & (CSN >> (pin - CSN_START_PIN)));
+            gpio_put(pin, 0xFE & (CSN >> (pin - MASTER_CSN_START_PIN)));
         }
     }
 
