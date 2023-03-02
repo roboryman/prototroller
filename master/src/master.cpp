@@ -133,12 +133,6 @@ void rescan_modules()
 
         char status = (identification == DISCONNECTED) ? 'x' : '!';
 
-        if(identification != DISCONNECTED)
-        {
-            gpio_put(MASTER_LED_R_PIN, 1);
-            gpio_put(MASTER_LED_G_PIN, 0);
-        }
-
         printf("[%c] Module %u is identified as ", status, module);
         printf(module_names[identification]);
         printf(".\n");
@@ -167,15 +161,16 @@ void init_gpio()
     // Initialize GPIO for LEDs
     gpio_init(MASTER_LED_R_PIN);
     gpio_set_dir(MASTER_LED_R_PIN, GPIO_OUT);
-    gpio_set_pulls(MASTER_RESCAN_PIN, false, false);
-
-    gpio_put(MASTER_LED_R_PIN, 0);
-
+    gpio_set_pulls(MASTER_LED_R_PIN, false, false);
+    gpio_put(MASTER_LED_R_PIN, 1);
     gpio_init(MASTER_LED_G_PIN);
     gpio_set_dir(MASTER_LED_G_PIN, GPIO_OUT);
-    gpio_set_pulls(MASTER_RESCAN_PIN, false, false);
-
+    gpio_set_pulls(MASTER_LED_G_PIN, false, false);
     gpio_put(MASTER_LED_G_PIN, 1);
+    gpio_init(MASTER_LED_B_PIN);
+    gpio_set_dir(MASTER_LED_B_PIN, GPIO_OUT);
+    gpio_set_pulls(MASTER_LED_B_PIN, false, false);
+    gpio_put(MASTER_LED_B_PIN, 1);
 
     //Setup the rescan callback
     gpio_set_irq_enabled_with_callback(
@@ -198,6 +193,7 @@ void modules_task()
     
     uint8_t buttonIndex = 0;
     buttons = 0;
+    bool connectedModules = false;
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
         //printf("Scanning protogrid for new data...\n");
@@ -218,6 +214,10 @@ void modules_task()
             if(!valid)
             {
                 module_IDs[module] = DISCONNECTED;
+            }
+            else
+            {
+                connectedModules = true;
             }
 
             // Deselect the module
@@ -267,6 +267,17 @@ void modules_task()
             // If spi is acting up... uncomment
             //sleep_ms(10);
         }
+    }
+
+    if(connectedModules)
+    {
+        gpio_put(MASTER_LED_R_PIN, 1);
+        gpio_put(MASTER_LED_G_PIN, 0);
+    }
+    else
+    {
+        gpio_put(MASTER_LED_R_PIN, 0);
+        gpio_put(MASTER_LED_G_PIN, 1);
     }
 }
 
