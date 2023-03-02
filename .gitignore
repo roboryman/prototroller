@@ -1,4 +1,8 @@
 build
 .vscode
-Schematics/module_board/module_board-backups
-Schematics/master_board/master_board-backups
+schematics/module_board/module_board-backups
+schematics/master_board/master_board-backups
+schematics/module_board_rev_a/module_board-backups
+schematics/master_board_rev_a/master_board-backups
+schematics/module_board_rev_b/module_board-backups
+schematics/master_board_rev_b/master_board-backups
