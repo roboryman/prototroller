@@ -5,17 +5,15 @@
 #include "hardware/adc.h"
 #include "../libraries/Component.h"
 #include "../libraries/SPISlave.h"
-
-#define VRX_PIN 26
-#define VRY_PIN 27
+#include "../../prototroller.h"
 
 Component joystick;
 SPISlave spi(
     spi_default,
-    SPI_TX_PIN,
-    SPI_RX_PIN,
-    SPI_SCK_PIN,
-    SPI_CSN_PIN,
+    MODULE_SPI_TX_PIN,
+    MODULE_SPI_RX_PIN,
+    MODULE_SPI_SCK_PIN,
+    MODULE_SPI_CSN_PIN,
     JOYSTICK_IDENTITY
 );
 
@@ -80,8 +78,8 @@ int main() {
 
     // Initialize the ADC/GPIO
     adc_init();
-    adc_gpio_init(VRX_PIN);
-    adc_gpio_init(VRY_PIN);
+    adc_gpio_init(MODULE_JOYSTICK_VRX_PIN);
+    adc_gpio_init(MODULE_JOYSTICK_VRY_PIN);
 
     printf("ADC initialized.\n");
 

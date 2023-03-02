@@ -5,21 +5,9 @@
 #include "hardware/spi.h"
 #include "hardware/gpio.h"
 
-//-- Pin Definitions --//
-#define SPI_TX_PIN      19
-#define SPI_SCK_PIN     18
-#define SPI_CSN_PIN     17
-#define SPI_RX_PIN      16
-#define CSN_END_PIN     15
-#define CSN_START_PIN   13
-
-//-- SPI Format --//
-#define BAUD_RATE   1000*1000
-#define BUF_LEN     0x100
-
 //-- Slave Selection --//
-#define MAX_MODULES             25
-#define NO_SLAVE_SELECTED_CSN   25
+#define MAX_MODULES             2
+#define NO_SLAVE_SELECTED_CSN   34
 
 //-- Handshake Identifiers --//
 #define VERIFY_BYTE         0x55
