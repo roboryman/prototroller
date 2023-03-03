@@ -29,7 +29,7 @@ At the highest abstraction our hardware consists of the following:
 
 <p>
 
-<img align="left" src="assets/master_board_rev_a.jpg" width="250"/>
+<img align="left" src="assets/master_board_rev_b.png" width="250"/>
 
 The master board is the - you guessed it - brains of the operation. It handles the data store of connected modules, transfers and receives data with modules over SPI, transfers and receives HID data over USB with the host, rescans modules, has buttons for various functions, etc. Most of the master board also serves as the <i>protogrid</i>, that is, the 4x5 grid of module slots the user can snap modules to.
 <br><br>
