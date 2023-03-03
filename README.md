@@ -16,7 +16,7 @@ In any case, we dub thy the __Prototroller__. Our team consists of 5 members:
 - Merrick Ryman
 - Evan Zhang
 
-This project is developed in conjunction with the UF CpE Capstone program (Fall 2022 - Spring 2023). This project is self-funded. As such, donations are appreciated in this educational pursuit (hardware is not cheap nowadays!).
+This project is developed in conjunction with the UF CpE Capstone program (Fall 2022 - Spring 2023). This project is self-funded. As such, donations are appreciated in this educational pursuit (hardware is not cheap nowadays).
 
 ## Hardware Architecture and Aesthetics
 At the highest abstraction our hardware consists of the following:
@@ -31,16 +31,16 @@ At the highest abstraction our hardware consists of the following:
 
 <img align="left" src="assets/master_board_rev_a.jpg" width="250"/>
 
-The master board is the - you guessed it - brains of the operation. It handles the data store of connected modules, transfers and receives data with modules over SPI, transfers and receives HID data over USB with the host, rescans modules, has headers for haptic feedback, has buttons for various functions, etc. Most of the master board also serves as the <i>protogrid</i>, that is, the 4x5 grid of module slots the user can snap modules to.
+The master board is the - you guessed it - brains of the operation. It handles the data store of connected modules, transfers and receives data with modules over SPI, transfers and receives HID data over USB with the host, rescans modules, has buttons for various functions, etc. Most of the master board also serves as the <i>protogrid</i>, that is, the 4x5 grid of module slots the user can snap modules to.
 <br><br>
-At a high level, controller data flows like this: Host < == USB == > MASTER BOARD < == SPI == > MODULE BOARDS.
+At a high level, data flows like this: Host <== USB ==> Master Board <== SPI ==> Module Board <== X ==> Component Interfaces.
 
 <br clear="left"/>
 </p>
 
-Direct interfaces on the master board include buttons for rescanning, resetting, and flashing. There are header pins for interfacing with haptic feedback motors (i.e., controller vibrations). An SWD header (1.27mm) is available for debugging. Most importantly, there is a USB-C receptacle for power and data connection with the host.
+The master board has buttons for rescanning, resetting, and flashing. There are header pins for interfacing with haptic feedback motors. A 3-pin JST-SH header (1.00mm) is available for serial wire debug. Finally, there is a USB-C receptacle (2.0) for power and data connection with the host.
 
-Connections between the <i>protogrid</i> and modules are magnetic through the use of 6-pin magnetic pogo pin connectors. These carry VCC, GND, and the SPI signals from the master board to the module board, while maintaining a solid physical connection. It is important to note the master feeds modules with 3.3V from its own LDO regulator.
+The connection interface between the <i>protogrid</i> and modules uses 6-pin magnetic pogo-pin connector pairs. These carry VCC, GND, and SPI signals from the master board to the module board(s), maintaining a solid physical connection. It is important to note the master board feeds modules with 3.3V from its own LDO regulator.
 
 ### Module Boards
 
@@ -48,7 +48,7 @@ Connections between the <i>protogrid</i> and modules are magnetic through the us
 
 <img align="right" src="assets/module_board_rev_a.png" width="250"/>
 
-The module boards are generic, no matter the component (more on that later). They are constrained at 30x30mm. These have no direct interface with the user, save for the magnetic connector and SWD headers for debugging and flashing. On the sides are pin headers, giving 10 signals to a component interface board, i.e., the "board" sitting atop the module board containing the component itself. In this way, we do not have to design a unique module board for each component, and simply offload the task to hand-making the component interface board.
+The module boards are generic and constrained at 30x30mm with no direct user interface, save for the magnetic connector and serial wire debug headers. On the sides are pin headers, giving 14 signals to a component interface board (the "board" sitting atop the module board containing the component itself). This way there are no unique module boards for each component, and we simply offload the task to the component interface board by hand.
 <br clear="right"/>
 </p>
 
@@ -58,15 +58,15 @@ The module boards are generic, no matter the component (more on that later). The
 
 <img align="left" src="assets/veroboard.jpg" width="250"/>
 
-The component interface boards are simply veroboards with soldered component(s). These veroboard sits atop the module board headers. We don't use "standard" veroboard, that is, long strips of copper. Instead, we opted for a kind with a copper pad per through-hole. This way, we can freely route our signals from the module board around the veroboard. Take a joystick for example. The design would look like this: PROTOGRID < == MAG. CONNECTOR == > MODULE BOARD < == HEADERS == > COMPONENT INTERFACE BOARD < == SOLDERED COMPONENTS ==> USER I/O.
+The component interface boards are veroboards with hand-routed component(s). These sit atop the module board headers. We may freely route signals from the module board around. The module interface then looks like this: Protogrid <== MAG. CONNECTOR ==> Module Board <== HEADERS ==> Component Interface Board <== SOLDERED COMPONENTS ==> User I/O.
 <br clear="left"/>
 </p>
 
 ### Enclosures
 
-Of course, this would not be a very comfortable controller to use without enclosures.
+This would not be a very comfortable controller to use without enclosures.
 
-The master board is enclosed by a chassis, with optional grips. It has a lid to hide the non-protogrid portion and also contains the haptic feedback motors.
+The master board is enclosed by a chassis and grips.
 
 The module enclosures contain the module board and component interface boards, but do not cover the component.
 
@@ -133,7 +133,7 @@ Here is an excellent tutorial to setting up and using Picoprobe: https://github.
 - [x] Interconnect Design
 - [x] Module Board Design(s)
 - [x] Master Board Design
-- [ ] Chassis/Module Enclosure Designs (Mar. 01, 2023)
+- [x] Chassis/Module Enclosure Designs (Mar. 01, 2023)
 - [ ] Advanced Firmware (Mar. 01, 2023)
 - [ ] Advanced HID Drivers (Mar. 01, 2023)
 - [ ] Advanced Component Support (Mar. 01, 2023)
