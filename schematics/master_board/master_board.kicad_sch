@@ -995,7 +995,7 @@
       (property "Datasheet" "" (id 3) (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
-      (property "ki_keywords" "power-flag" (id 4) (at 0 0 0)
+      (property "ki_keywords" "global power" (id 4) (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
       (property "ki_description" "Power symbol creates a global label with name \"+1V1\"" (id 5) (at 0 0 0)
@@ -1047,7 +1047,7 @@
       (property "Datasheet" "" (id 3) (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
-      (property "ki_keywords" "power-flag" (id 4) (at 0 0 0)
+      (property "ki_keywords" "global power" (id 4) (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
       (property "ki_description" "Power symbol creates a global label with name \"+3V3\"" (id 5) (at 0 0 0)
@@ -1099,7 +1099,7 @@
       (property "Datasheet" "" (id 3) (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
-      (property "ki_keywords" "power-flag" (id 4) (at 0 0 0)
+      (property "ki_keywords" "global power" (id 4) (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
       (property "ki_description" "Power symbol creates a global label with name \"GND\" , ground" (id 5) (at 0 0 0)
@@ -1139,7 +1139,7 @@
       (property "Datasheet" "~" (id 3) (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
-      (property "ki_keywords" "power-flag" (id 4) (at 0 0 0)
+      (property "ki_keywords" "flag power" (id 4) (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
       (property "ki_description" "Special symbol for telling ERC where power comes from" (id 5) (at 0 0 0)
@@ -1179,7 +1179,7 @@
       (property "Datasheet" "" (id 3) (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
-      (property "ki_keywords" "power-flag" (id 4) (at 0 0 0)
+      (property "ki_keywords" "global power" (id 4) (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
       (property "ki_description" "Power symbol creates a global label with name \"VBUS\"" (id 5) (at 0 0 0)
@@ -5133,64 +5133,64 @@
       (reference "J3") (unit 1) (value "Conn_01x04_Male") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/7e7beb70-8cc5-489d-b2ba-9f4a3b3ad891"
-      (reference "M1") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M0") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/42c01002-ee51-4124-bd24-bda8db0450e3"
-      (reference "M2") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M1") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/a5c57a6d-fdd5-4547-8eed-3b2217a53e4e"
-      (reference "M3") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M2") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/d6b69bbd-0b50-4bf9-ac0f-da334450572b"
-      (reference "M4") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M3") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/1def0ca7-b156-4a21-8251-88198eba149b"
-      (reference "M5") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M4") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/2273827e-2cdf-48fe-aa08-f9defa85ce0a"
-      (reference "M6") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M5") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/e99c4c7c-4f67-4c2c-a137-1f5a889f9f98"
-      (reference "M7") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M6") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/ffc1c408-0fab-40c7-a2af-df00c4817f54"
-      (reference "M8") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M7") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/91df4557-6784-48d6-9286-b6abce585967"
-      (reference "M9") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M8") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/dd50d7e8-49a9-4e5d-94b2-10b5cbdc8aaa"
-      (reference "M10") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M9") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/af507f20-d744-436a-9d6e-c59da118b9d6"
-      (reference "M11") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M10") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/3a91475f-d32b-4c6d-8cd8-96bb658fcb89"
-      (reference "M12") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M11") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/a91558db-3469-4774-82fd-c7b3a009da1a"
-      (reference "M13") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M12") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/813d0449-19d1-4f7c-9330-1f2cc20f8a49"
-      (reference "M14") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M13") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/a39568f4-ac9d-47f2-b135-80aa4ac5d7fb"
-      (reference "M15") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M14") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/6db4f993-1f64-4a9c-84fd-756161f067fa"
-      (reference "M16") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M15") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/77160d1a-2f49-451a-8798-5c44fca5c3b1"
-      (reference "M17") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M16") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/b958f99c-2c4b-4ca4-8c38-abc7dfe42382"
-      (reference "M18") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M17") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/12f8e4c5-ac19-4679-914b-972d79eb4b1f"
-      (reference "M19") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M18") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/09594df6-6208-43c9-9dca-7a15394a1c40"
-      (reference "M20") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
+      (reference "M19") (unit 1) (value "Conn_01x06_Male") (footprint "prototroller_footprints:Mag_Pogo_6P_P2.2mm_Female")
     )
     (path "/780df503-7767-43fe-82f3-1b68fe48114f"
       (reference "R1") (unit 1) (value "1k") (footprint "Resistor_SMD:R_0402_1005Metric")
@@ -5259,34 +5259,34 @@
       (reference "TP3") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_2.5x2.5mm")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/7d11e70c-a89d-4e4f-b2a7-46e7cc051e38"
-      (reference "TP4") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_D4.0mm")
+      (reference "TP4") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_2.5x2.5mm")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/ba4b407b-fad1-4b52-bfdb-b02a997e1db9"
-      (reference "TP5") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_D4.0mm")
+      (reference "TP5") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_2.5x2.5mm")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/f905f143-f4b3-4ced-a1f3-7e48f8366944"
-      (reference "TP6") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_D4.0mm")
+      (reference "TP6") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_2.5x2.5mm")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/1f1456db-6c40-4cbc-90da-cc46a1f4cfe9"
-      (reference "TP7") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_D4.0mm")
+      (reference "TP7") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_2.5x2.5mm")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/083e1c6c-d5d2-4ed3-8c19-6030a27295f7"
-      (reference "TP8") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_D4.0mm")
+      (reference "TP8") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_2.5x2.5mm")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/cc8973ff-ae1c-44f3-8732-a2324c3410e2"
-      (reference "TP9") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_D4.0mm")
+      (reference "TP9") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_2.5x2.5mm")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/f47f34e8-a121-47d8-90a9-981a5d05d14f"
-      (reference "TP10") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_D4.0mm")
+      (reference "TP10") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_2.5x2.5mm")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/6caf46b0-29de-4186-b5a5-28a89d4c16a9"
-      (reference "TP11") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_D4.0mm")
+      (reference "TP11") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_2.5x2.5mm")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/ed93441a-eb2b-41ff-a0b2-c3945d71dc08"
-      (reference "TP12") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_D4.0mm")
+      (reference "TP12") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_2.5x2.5mm")
     )
     (path "/9424b353-07c0-42c4-b795-d9b443cb3bee/85f50788-9a08-47f1-9e39-e02d9adbdba3"
-      (reference "TP13") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_D4.0mm")
+      (reference "TP13") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_2.5x2.5mm")
     )
     (path "/4c1ec3c1-967c-4372-8481-0e54250ca3a6"
       (reference "U1") (unit 1) (value "NCP1117-3.3_SOT223") (footprint "Package_TO_SOT_SMD:SOT-223-3_TabPin2")
