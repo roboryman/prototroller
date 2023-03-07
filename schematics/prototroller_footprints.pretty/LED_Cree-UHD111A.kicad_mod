@@ -33,7 +33,7 @@
   (pad "2" smd rect (at -0.33 0.33) (size 0.32 0.32) (layers "F.Cu" "F.Paste" "F.Mask") (tstamp df159f6f-219f-4986-b816-54a1f53ce6ba))
   (pad "3" smd rect (at 0.33 0.33) (size 0.32 0.32) (layers "F.Cu" "F.Paste" "F.Mask") (tstamp 6dd259ab-6e3f-4a9f-94d7-a21b22932737))
   (pad "4" smd rect (at 0.33 -0.33) (size 0.32 0.32) (layers "F.Cu" "F.Paste" "F.Mask") (tstamp c7b7223d-7a0a-4b75-8c7c-5d62bd855dfc))
-  (model "//wsl.localhost/Ubuntu/home/merrick/prototroller/Schematics/models/UHD111A-FKA-C3K23E1L3VG5ZB3Z3.stp"
+  (model "${KIPRJMOD}/../models/UHD111A-FKA-C3K23E1L3VG5ZB3Z3.stp"
     (offset (xyz 0 0 0))
     (scale (xyz 1 1 1))
     (rotate (xyz 0 0 0))

@@ -22,4 +22,9 @@
   (fp_line (start 5.7 -2.35) (end 5.7 2.35) (layer "F.Fab") (width 0.127) (tstamp b9f99c06-5d27-472b-8e2a-1acad3e58683))
   (pad "1" smd rect (at -4.75 0) (size 5.6 2.1) (layers "F.Cu" "F.Paste" "F.Mask") (tstamp 901e482b-4dc4-40c3-929a-b64ee81105dc))
   (pad "2" smd rect (at 4.75 0) (size 5.6 2.1) (layers "F.Cu" "F.Paste" "F.Mask") (tstamp cdc57d07-4d47-4972-9697-6cba306a0183))
+  (model "${KIPRJMOD}/../models/ABLS-12.000MHZ-B4-T.step"
+    (offset (xyz 0 0 0))
+    (scale (xyz 1 1 1))
+    (rotate (xyz -90 0 0))
+  )
 )

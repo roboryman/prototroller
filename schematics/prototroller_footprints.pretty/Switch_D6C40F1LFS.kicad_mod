@@ -26,10 +26,10 @@
   (pad "2" thru_hole circle (at 5 0) (size 2 2) (drill 1.1) (layers *.Cu *.Mask) (tstamp 8ea123b6-b0f7-4779-a21f-3d4e920d59d6))
   (pad "3" thru_hole circle (at 0 5) (size 2 2) (drill 1.1) (layers *.Cu *.Mask) (tstamp 986b6264-ae57-40f2-bc42-b05f31087759))
   (pad "4" thru_hole circle (at 5 5) (size 2 2) (drill 1.1) (layers *.Cu *.Mask) (tstamp 25ed79cd-96b6-4055-8fb5-bb143c775cf8))
-  (model "${KICAD6_3DMODEL_DIR}/Button_Switch_THT.3dshapes/Push_E-Switch_KS01Q01.wrl"
-    (offset (xyz 0 0 0))
+  (model "${KIPRJMOD}/../models/D6C40F1LFS.stp"
+    (offset (xyz 2.5 -2.5 6.5))
     (scale (xyz 1 1 1))
-    (rotate (xyz 0 0 0))
+    (rotate (xyz -90 0 -90))
   )
   (model "//wsl.localhost/Ubuntu/home/merrick/prototroller/Schematics/models/D6C40F1LFS.stp"
     (offset (xyz 2.5 -2.5 5))
