@@ -9,7 +9,7 @@
 #include "../../prototroller.h"
 
 #define MOUSE_SENS 5
-
+#define NUM_JOYSTICKS 3
 /* Enumerations */
 enum
 {
@@ -39,9 +39,13 @@ const int delay = 50; // Rescan button debounce delay
 /* TinyUSB mounted blink interval */
 static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
 
+/* Current Module Counts for data formatting */
+uint8_t numButtons = 0;
+uint8_t numJoysticks = 0;
 /* Data holders for main app => TinyUSB */
 int8_t delta_x;
 int8_t delta_y;
+int8_t joystickDeltas[4][2];
 uint8_t buttons;
 
 /* Prototypes */
@@ -116,7 +120,8 @@ void printbuf(uint8_t buf[], size_t len)
 void rescan_modules()
 {
     printf("[!] Rescanning for active modules...\n");
-
+    numButtons = 0;
+    numJoysticks = 0;
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
         // Select the current (potentially connected) module
@@ -130,7 +135,17 @@ void rescan_modules()
 
         // Update the module identification
         module_IDs[module] = identification;
-
+        switch (identification)
+        {
+        case BUTTON_MODULE:
+            numButtons += 1;
+            break;
+        
+        case JOYSTICK_MODULE:
+            numJoysticks +=1;
+        default:
+            break;
+        }
         char status = (identification == DISCONNECTED) ? 'x' : '!';
 
         printf("[%c] Module %u is identified as ", status, module);
@@ -192,7 +207,13 @@ void modules_task()
     //rescan_modules();
     
     uint8_t buttonIndex = 0;
+    uint8_t joystickIndex = 0;
     buttons = 0;
+    //Clean Joystick Data
+    for(int i = 0; i < NUM_JOYSTICKS; i++){
+        joystickDeltas[i][0] = 0; //X Delta
+        joystickDeltas[i][1] = 0; //Y Delta
+    }
     bool connectedModules = false;
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
@@ -228,7 +249,7 @@ void modules_task()
             {
                 case BUTTON_MODULE:
                     {
-                        //printbuf(in_buf, BUF_LEN);
+                        //Button Module
                         if(in_buf[0] == 0x00) {
                             buttons = (1 << buttonIndex); 
                         }
@@ -245,9 +266,9 @@ void modules_task()
                         uint16_t y = (in_buf[3] << 8) | in_buf[2];
 
                         uint16_t offset = 200;
-                        delta_x = ((x + offset) >> 9)-4;
-                        delta_y = ((y + offset) >> 9)-4;
-
+                        joystickDeltas[joystickIndex][0] = ((x + offset) >> 9)-4;
+                        joystickDeltas[joystickIndex][1] = ((y + offset) >> 9)-4;
+                        joystickIndex += 1;
                         //printbuf(in_buf, BUF_LEN);
 
                         printf("Delta X: %d\n", delta_x);
@@ -397,9 +418,39 @@ void hid_task(void)
     // skip if hid is not ready yet
     if (tud_hid_ready()) {
         // Format and send HID report data
-
+        hid_gamepad_report_t report;
+        switch (numJoysticks) {
+            //Populate Analog Components Properly
+            case 2:
+                report.z = joystickDeltas[1][0];
+                report.rz = joystickDeltas[1][1];
+                //TODO -- Additional Analog Components (Dials/Sliders) Logic for population (as we have upper limit of 8 analog components on a generic gamepad packet with picoSDK declaration)
+                //Intentional No Break
+            case 1:
+                report.x = joystickDeltas[0][0];
+                report.y = joystickDeltas[0][1];
+                break;
+            default: break;
+        }
+        report.rx = 0;
+        report.ry = 0;
+        report.hat = 0; //TODO : D-Pad Values 
+        //Add button data
+        report.buttons = buttons;
+        //     x  =      ///< Delta x  movement of left analog-stick
+        //     y  =      ///< Delta y  movement of left analog-stick
+        //     z  =      ///< Delta z  movement of right analog-joystick
+        //     rz =      ///< Delta Rz movement of right analog-joystick
+        //     rx =      ///< Delta Rx movement of analog left trigger
+        //     ry =       ///< Delta Ry movement of analog right trigger
+        //     hat =        ///< Buttons mask for currently pressed buttons in the DPad/hat
+        //     buttons =  ///< Buttons mask for currently pressed buttons
+        // }
         // Mouse (from joystick and buttons)
         tud_hid_mouse_report(REPORT_ID_MOUSE, buttons, delta_x, delta_y, 0, 0);
+
+        //Generic Gamepad
+        tud_hid_n_report(0, REPORT_ID_GAMEPAD, &report, sizeof(report));
     }
 }
 

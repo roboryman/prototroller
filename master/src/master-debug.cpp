@@ -9,7 +9,7 @@
 #include "../../prototroller.h"
 
 #define MOUSE_SENS 5
-
+#define NUM_JOYSTICKS 3
 /* Enumerations */
 enum
 {
@@ -39,9 +39,13 @@ const int delay = 50; // Rescan button debounce delay
 /* TinyUSB mounted blink interval */
 static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
 
+/* Current Module Counts for data formatting */
+uint8_t numButtons = 0;
+uint8_t numJoysticks = 0;
 /* Data holders for main app => TinyUSB */
 int8_t delta_x;
 int8_t delta_y;
+int8_t joystickDeltas[4][2];
 uint8_t buttons;
 
 /* Prototypes */
@@ -51,10 +55,10 @@ void hid_task(void);
 /* SPI Master */
 SPIMaster master(
         spi_default,
-        SPI_TX_PIN,
-        SPI_RX_PIN,
-        SPI_SCK_PIN,
-        SPI_CSN_PIN,
+        MASTER_SPI_TX_PIN,
+        MASTER_SPI_RX_PIN,
+        MASTER_SPI_SCK_PIN,
+        MASTER_SPI_CSN_PIN,
         false
     );
 
@@ -164,7 +168,7 @@ void rescan_modules_debug()
         } else {
             gpio_put(MASTER_LED_G_PIN,0);
         }
-        delay_ms(500);
+        //delay_ms(500);
         gpio_put(MASTER_LED_R_PIN,1);
         gpio_put(MASTER_LED_G_PIN,1);
     }
@@ -176,7 +180,7 @@ void rescan_modules_debug()
 void init_gpio()
 {
     // Initialize GPIO pins for CSNs
-    for(uint8_t pin = CSN_START_PIN; pin <= CSN_END_PIN; pin++)
+    for(uint8_t pin = MASTER_CSN_START_PIN; pin <= MASTER_CSN_END_PIN; pin++)
     {
         gpio_init(pin);
         gpio_set_dir(pin, true);
@@ -201,13 +205,13 @@ void init_gpio()
         gpio_put(MASTER_LED_B_PIN, 1);
 
     // Initialize GPIO pin for rescan button
-    gpio_init(RESCAN_BUTTON_PIN);
-    gpio_set_dir(RESCAN_BUTTON_PIN, false);
-    gpio_set_pulls(RESCAN_BUTTON_PIN, false, false);
+    gpio_init(MASTER_RESCAN_PIN);
+    gpio_set_dir(MASTER_RESCAN_PIN, false);
+    gpio_set_pulls(MASTER_RESCAN_PIN, false, false);
 
     //Setup the rescan callback
     gpio_set_irq_enabled_with_callback(
-        RESCAN_BUTTON_PIN,
+        MASTER_RESCAN_PIN,
         GPIO_IRQ_EDGE_RISE,
         true,
         &rescan_callback
@@ -222,7 +226,13 @@ void modules_task()
     }
     
     uint8_t buttonIndex = 0;
+    uint8_t joystickIndex = 0;
     buttons = 0;
+    //Clean Joystick Data
+    for(int i = 0; i < NUM_JOYSTICKS; i++){
+        joystickDeltas[i][0] = 0; //X Delta
+        joystickDeltas[i][1] = 0; //Y Delta
+    }
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
         if(module_IDs[module])
@@ -269,9 +279,9 @@ void modules_task()
                         uint16_t y = (in_buf[3] << 8) | in_buf[2];
 
                         uint16_t offset = 200;
-                        delta_x = ((x + offset) >> 9)-4;
-                        delta_y = ((y + offset) >> 9)-4;
-
+                        joystickDeltas[joystickIndex][0] = ((x + offset) >> 9)-4;
+                        joystickDeltas[joystickIndex][1] = ((y + offset) >> 9)-4;
+                        joystickIndex += 1;
                         //printbuf(in_buf, BUF_LEN);
 
                         printf("Delta X: %d\n", delta_x);
@@ -396,30 +406,115 @@ void hid_task(void)
         // and REMOTE_WAKEUP feature is enabled by host
         tud_remote_wakeup();
     }
+    // else
+    // {
+    //     // Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
+    //     send_hid_report(REPORT_ID_MOUSE, 0);
 
+
+    // }
 
     // skip if hid is not ready yet
     if (tud_hid_ready()) {
         // Format and send HID report data
-        typedef struct TU_ATTR_PACKED
-        {
-            uint8_t buttons; /**< buttons mask for currently pressed buttons in the mouse. */
-            int8_t  x;       /**< Current delta x movement of the mouse. */
-            int8_t  y;       /**< Current delta y movement on the mouse. */
-            int8_t  wheel;   /**< Current delta wheel movement on the mouse. */
-            int8_t  pan;     // using AC Pan
-        } hid_testing_report_t;
-          hid_gamepad_report_t report =
-        {
-            .x       = delta_x,
-            .y       = delta_y,
-            .buttons = buttons
-        };
+        hid_gamepad_report_t report;
+        switch (numJoysticks) {
+            //Populate Analog Components Properly
+            case 2:
+                report.z = joystickDeltas[1][0];
+                report.rz = joystickDeltas[1][1];
+                //TODO -- Additional Analog Components (Dials/Sliders) Logic for population (as we have upper limit of 8 analog components on a generic gamepad packet with picoSDK declaration)
+                //Intentional No Break
+            case 1:
+                report.x = joystickDeltas[0][0];
+                report.y = joystickDeltas[0][1];
+                break;
+            default: break;
+        }
+        report.rx = 0;
+        report.ry = 0;
+        report.hat = 0; //TODO : D-Pad Values 
+        //Add button data
+        report.buttons = buttons;
+        //     x  =      ///< Delta x  movement of left analog-stick
+        //     y  =      ///< Delta y  movement of left analog-stick
+        //     z  =      ///< Delta z  movement of right analog-joystick
+        //     rz =      ///< Delta Rz movement of right analog-joystick
+        //     rx =      ///< Delta Rx movement of analog left trigger
+        //     ry =       ///< Delta Ry movement of analog right trigger
+        //     hat =        ///< Buttons mask for currently pressed buttons in the DPad/hat
+        //     buttons =  ///< Buttons mask for currently pressed buttons
+        // }
+        // Mouse (from joystick and buttons)
+        tud_hid_mouse_report(REPORT_ID_MOUSE, buttons, delta_x, delta_y, 0, 0);
 
+        //Generic Gamepad
         tud_hid_n_report(0, REPORT_ID_GAMEPAD, &report, sizeof(report));
     }
 }
 
+// Invoked when sent REPORT successfully to host
+// Application can use this to send the next report
+// Note: For composite reports, report[0] is report ID
+// void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint8_t len)
+// {
+//   (void)instance;
+//   (void)len;
+
+//   uint8_t next_report_id = report[0] + 1;
+
+//   if (next_report_id < REPORT_ID_COUNT)
+//   {
+//     send_hid_report(next_report_id, 0);
+//   }
+// }
+
+// Invoked when received GET_REPORT control request
+// Application must fill buffer report's content and return its length.
+// Return zero will cause the stack to STALL request
+uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+{
+  // TODO not Implemented
+  (void)instance;
+  (void)report_id;
+  (void)report_type;
+  (void)buffer;
+  (void)reqlen;
+
+  return 0;
+}
+
+// Invoked when received SET_REPORT control request or
+// received data on OUT endpoint ( Report ID = 0, Type = 0 )
+void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize)
+{
+    (void) instance;
+
+    if (report_type == HID_REPORT_TYPE_OUTPUT)
+    {
+        // Set keyboard LED e.g Capslock, Numlock etc...
+        if (report_id == REPORT_ID_KEYBOARD)
+        {
+            // bufsize should be (at least) 1
+            if ( bufsize < 1 ) return;
+
+            uint8_t const kbd_leds = buffer[0];
+
+            if (kbd_leds & KEYBOARD_LED_CAPSLOCK)
+            {
+                // Capslock On: disable blink, turn led on
+                blink_interval_ms = 0;
+                board_led_write(true);
+            }
+            else
+            {
+                // Caplocks Off: back to normal blink
+                board_led_write(false);
+                blink_interval_ms = BLINK_MOUNTED;
+            }
+        }
+    }
+}
 
 //--------------------------------------------------------------------+
 // BLINKING TASK
