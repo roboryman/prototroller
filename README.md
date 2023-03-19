@@ -3,13 +3,13 @@
 </p>
 
 ## About
-Modular controllers are few and far between, especially in the open-source community. We aim to change this by creating a full-stack, feature-rich, usable, responsive, and robust modular controller. The device could be used for any HID-compliant purpose, but we focus on developing swappable modules that can form customizable gamepads.
+We aim to create a ***modular*** controller that is full-stack, feature-rich, responsive, and robust. The controller could be used for any HID-compliant purpose, but we focus on developing hot-swappable modules that can form customizable gamepads.
 
-A potential use-case is QoL hardware-level remapping for the benefit of the general user.
+A potential use case is general hardware level remapping for quality of life.
 
-Another could be rapidly prototyping different controller layouts for games or simulations in development.
+Another is rapidly prototyping different controller layouts for games or simulations in development.
 
-In any case, we dub thy the __Prototroller__. Our team consists of 5 members:
+In any case, this is the __Prototroller__. Our team consists of 5 members:
 - Yu-yang Hsieh
 - Britton McLeavy
 - Caleb O'Malley
@@ -31,16 +31,14 @@ At the highest abstraction our hardware consists of the following:
 
 <img align="left" src="assets/master_board_rev_b.png" width="250"/>
 
-The master board is the - you guessed it - brains of the operation. It handles the data store of connected modules, transfers and receives data with modules over SPI, transfers and receives HID data over USB with the host, rescans modules, has buttons for various functions, etc. Most of the master board also serves as the <i>protogrid</i>, that is, the 4x5 grid of module slots the user can snap modules to.
-<br><br>
-At a high level, data flows like this: Host <== USB ==> Master Board <== SPI ==> Module Board <== X ==> Component Interfaces.
+The master board handles the data store of connected modules, transfers and receives data with modules over SPI, transfers and receives HID data over USB with the host, rescans modules, has buttons for various functions, etc. Most of the master board also serves as the the 4x5 grid of module slots the user can snap modules to using magnetic pogo-pin connectors.
 
 <br clear="left"/>
 </p>
 
-The master board has buttons for rescanning, resetting, and flashing. There are header pins for interfacing with haptic feedback motors. A 3-pin JST-SH header (1.00mm) is available for serial wire debug. Finally, there is a USB-C receptacle (2.0) for power and data connection with the host.
+The master board has buttons for rescanning, resetting, and flashing. There are header pins for interfacing with haptic feedback motors. A 3-pin JST-SH header (1.00mm) is available for serial wire debug. There is a USB-C receptacle (2.0) for power and data connection with the host.
 
-The connection interface between the <i>protogrid</i> and modules uses 6-pin magnetic pogo-pin connector pairs. These carry VCC, GND, and SPI signals from the master board to the module board(s), maintaining a solid physical connection. It is important to note the master board feeds modules with 3.3V from its own LDO regulator.
+The connection interface between the master board and module boards uses 6-pin magnetic pogo-pin connectors. These carry VCC, GND, and SPI signals, while maintaining a solid physical connection. The master board feeds modules with 3.3V.
 
 ### Module Boards
 
@@ -48,7 +46,7 @@ The connection interface between the <i>protogrid</i> and modules uses 6-pin mag
 
 <img align="right" src="assets/module_board_rev_a.png" width="250"/>
 
-The module boards are generic and constrained at 30x30mm with no direct user interface, save for the magnetic connector and serial wire debug headers. On the sides are pin headers, giving 14 signals to a component interface board (the "board" sitting atop the module board containing the component itself). This way there are no unique module boards for each component, and we simply offload the task to the component interface board by hand.
+Module boards are generic and constrained at 30x30mm with no direct user interface (except for the connector and SWD headers). On the sides are headers providing 14 signals to a component interface board that would sit above. This way there are no unique module boards for each component, and we simply offload the task to the component interface board by hand.
 <br clear="right"/>
 </p>
 
@@ -58,7 +56,7 @@ The module boards are generic and constrained at 30x30mm with no direct user int
 
 <img align="left" src="assets/veroboard.jpg" width="250"/>
 
-The component interface boards are veroboards with hand-routed component(s). These sit atop the module board headers. We may freely route signals from the module board around. The module interface then looks like this: Protogrid <== MAG. CONNECTOR ==> Module Board <== HEADERS ==> Component Interface Board <== SOLDERED COMPONENTS ==> User I/O.
+The component interface boards are veroboards sitting above the module board headers. We may freely route signals from the module board to a component, the direct user interface.
 <br clear="left"/>
 </p>
 
@@ -66,9 +64,11 @@ The component interface boards are veroboards with hand-routed component(s). The
 
 This would not be a very comfortable controller to use without enclosures.
 
-The master board is enclosed by a chassis and grips.
+The master board is enclosed by a chassis and grips. The master board is raised above the chassis with standoffs.
 
 The module enclosures contain the module board and component interface boards, but do not cover the component.
+
+Note: The mockup below is a bit outdated in terms of dimensions, but demonstrates the overall design well enough (including enclosures).
 
 <p align="center">
   <img src="assets/overall.png" width="600" align="center" />
@@ -77,30 +77,28 @@ The module enclosures contain the module board and component interface boards, b
 ## Usage
 There are a few ways you may use the Prototroller.
 ### _Our Hardware, Our Software_
-Recommended. This combines our hardware (listed above) with the software to do the job.
-The end result is a full-stack (HW+SW) modular controller that implements our goals and, as such, is supported.
-Our recommended PCB supplier is JLCPCB, and we are working on formalizing our recommendations for ordering.
+Recommended. This combines our hardware listed above with the firmware to do the job.
+The end result is a full-stack modular controller.
 
-We cannot provide any hardware support, sorry; only software in this case.
+Our recommended PCB supplier is JLCPCB, and we are working on formalizing our recommendations for ordering.
 
 ### _Your Hardware, Our Software_
 If you want to develop your own hardware to use with our software, that is excellent! In fact, we are curious to see your designs.
 
-You may even use our designs as a starting point. For example, you may want to make the modules slightly larger.
-
-In any case, we cannot promise any help if you do this. An attempt may be made, but we have busy lives too.
+You may use our designs as a starting point. For example, you may want to make the modules slightly larger.
 
 ## Building and Flashing Master Boards
-The master board has a USB-C receptacle which may be used mount and flash RP2040 binaries (.UF2), accessible by holding down BOOTSEL and performing a reset. The process to generate the binary is as so:
-1. Ensure the pico-sdk is installed alongside the TLD.
-2. Make and cd into a build directory, and export the Pico SDK path:
+You may use the provided VSCode launch debug configuration and flash task. This requires a Picoprobe, OpenOCD, and Cortex Debug.
+An easier way is to use the USB receptacle to mount and flash RP2040 binaries (.uf2), accessible by holding down BOOTSEL and performing a reset. **If you are using VSCode, you can simply edit settings.json for your SDK path, build the target, and proceed to step 5**. Otherwise, the process to generate the binary is as so:
+1. Ensure you have the Pico SDK cloned somewhere, such as ```~/pico-sdk```.
+2. Make and cd into a 'build' subdirectory, and export the Pico SDK path:
     ```
     $ cd prototroller
     $ mkdir build
     $ cd build
     $ export PICO_SDK_PATH=...
     ```
-3. Generate the build files with flag -DPICO_BOARD=prototroller:
+3. Generate the build targets:
     ```
     $ cmake -DPICO_BOARD=prototroller ..
     ```
@@ -108,21 +106,24 @@ The master board has a USB-C receptacle which may be used mount and flash RP2040
 5. This will generate the appropriate `.uf2` binaries, which can be flashed by dragging onto the mount.
 
 ## Building and Flashing Module Boards
-The module boards clearly do not have a USB-C receptacle, so the process to flash is a bit more involved. You must use the available SWD pins in conjunction with a programmer: we recommend the Raspberry Pi Pico flashed with the Picoprobe firmware.
+The module boards do not have a USB receptacle. You must use SWD in conjunction with a debug probe. We recommend the official Raspberry Pi Debug Probe ($12), or a Pico flashed with the Picoprobe firmware.
 
-This process is only an example of how you could flash using SWD after setting up Picoprobe, OpenOCD, etc:
-1. Follow the steps listed in "Building and Flashing Master Boards" to generate the firmware for the module boards.
-2. Connect SWDIO and SWCLK from Picoprobe to the SWD headers above the flash on the module board (labeled on rear silkscreen).
+This is how you might do it after setting up Picoprobe, OpenOCD, etc:
+1. Follow the steps listed in "Building and Flashing Master Boards" to generate the binary for the module boards.
+2. Connect SWDIO and SWCLK from debug probe to the SWD headers above the flash on the module board (labeled on rear silkscreen).
 3. Connect a *common ground* between the Picoprobe and the module board.
 4. Snap the module board to a powered master board (alternatively, supply 3V3 through the female header).
-5. If you are using WSL, pass-through the Picoprobe in Powershell using usbipd.
-6. Execute the following command to flash firmware, where `joystick-module.elf` is the name of the ELF executable generated previously:
+5. If you are using WSL, pass-through the Picoprobe in Powershell using ```usbipd```.
+6. Use the '```Prototroller Flash```' task in VSCode, or execute the following command, where `joystick-module.elf` is the name of the ELF executable generated previously:
     ```
     sudo openocd -f interface/cmsis-dap.cfg -f target/rp2040.cfg -c "adapter speed 5000" -c "program build/module/joystick-module.elf verify reset exit"
     ```
-If all went well, the module board should be flashed. You can safely remove the SWD wires and set the Picoprobe aside.
+If all went well, the module board should be flashed. You can safely remove the SWD wires and set the debug probe aside.
 
-Here is an excellent tutorial to setting up and using Picoprobe: https://github.com/robotdad/piconotes
+Documentation for the official Raspberry Pi Debug Probe:
+https://www.raspberrypi.com/documentation/microcontrollers/debug-probe.html
+
+Alternatively, here is an excellent tutorial to setting up and using Picoprobe if you have a Pico available: https://github.com/robotdad/piconotes
 
 ## Roadmap
 - [x] Proof of Concept Build

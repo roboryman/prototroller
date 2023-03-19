@@ -34,8 +34,8 @@
             "PICO_PLATFORM":"rp2040"
         },
     "cmake.buildEnvironment": {
-            "PICO_SDK_PATH":"~/pico-sdk", // Change this to your Pico SDK installation!
-            "PICO_EXAMPLES_PATH":"~/pico-examples", // Change this to your Pico Examples installation!
+            "PICO_SDK_PATH":"~/pico-sdk" // Change this to your Pico SDK installation!
+            //"PICO_EXAMPLES_PATH":"~/pico-examples", // Change this to your Pico Examples installation!
             // NOTE: if you change these, you might have to clear the CMake cache
             // To do this in VSCode, change the kit from GCC 9.2.1 arm-none-eabi
             // to something else and back.
