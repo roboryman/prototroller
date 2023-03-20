@@ -8,6 +8,7 @@
 // "Prototroller Debug" configuration.
 // To flash: Ctrl+Shift+B Or select "Run Task" from terminal menu and select "Prototroller Flash".
 // NOTE: "Run without debugging" doesn't with with Cortex Debug, use the flash task instead.
+// IMPORTANT: Make sure to edit the path to your Pico SDK in settings.json (cmake environment) and launch.json (svdFile)
 {
     "version": "0.2.0",
     "configurations": [
@@ -24,7 +25,7 @@
                 "interface/cmsis-dap.cfg",
                 "target/rp2040.cfg"
             ],
-            "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
+            "svdFile": "${workspaceRoot}/../pico-sdk/src/rp2040/hardware_regs/rp2040.svd",
             "runToMain": true,
             "openOCDLaunchCommands": [
                 "adapter speed 5000"

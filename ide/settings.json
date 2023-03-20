@@ -8,6 +8,7 @@
 // "Prototroller Debug" configuration.
 // To flash: Ctrl+Shift+B Or select "Run Task" from terminal menu and select "Prototroller Flash".
 // NOTE: "Run without debugging" doesn't with with Cortex Debug, use the flash task instead.
+// IMPORTANT: Make sure to edit the path to your Pico SDK in settings.json (cmake environment) and launch.json (svdFile)
 {
     // These settings tweaks to the cmake plugin will ensure
     // that you debug using cortex-debug instead of trying to launch
@@ -29,15 +30,11 @@
     "cmake.buildBeforeRun": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "other": "settings",
-    "cmake.configureEnvironment": {
-            "PICO_BOARD":"prototroller",
-            "PICO_PLATFORM":"rp2040"
-        },
-    "cmake.buildEnvironment": {
-            "PICO_SDK_PATH":"~/pico-sdk" // Change this to your Pico SDK installation!
-            //"PICO_EXAMPLES_PATH":"~/pico-examples", // Change this to your Pico Examples installation!
-            // NOTE: if you change these, you might have to clear the CMake cache
-            // To do this in VSCode, change the kit from GCC 9.2.1 arm-none-eabi
-            // to something else and back.
-        }
+    "cmake.configureArgs": [
+            "-DPICO_BOARD=prototroller",
+            "-DPICO_PLATFORM=rp2040"
+    ],
+    "cmake.environment": {
+        "PICO_SDK_PATH":"~/pico-sdk"
+    }
 }

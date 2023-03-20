@@ -7,27 +7,27 @@ add_executable(master-debug)
 pico_enable_stdio_usb(master 1)
 pico_enable_stdio_usb(master-debug 1)
 
-target_sources(master PRIVATE
+target_sources(master PUBLIC
     libraries/SPIMaster.cpp
     src/master.cpp
     src/usb_descriptors.c
 )
 
-target_sources(master-debug PRIVATE
+target_sources(master-debug PUBLIC
     libraries/SPIMaster.cpp
     src/master-debug.cpp
     src/usb_descriptors.c
 )
 
-target_include_directories(master PRIVATE
+target_include_directories(master PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
-target_include_directories(master-debug PRIVATE
+target_include_directories(master-debug PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
-target_link_libraries(master PRIVATE
+target_link_libraries(master PUBLIC
     pico_stdlib 
     hardware_gpio
     hardware_clocks
@@ -38,7 +38,7 @@ target_link_libraries(master PRIVATE
     tinyusb_board
 )
 
-target_link_libraries(master-debug PRIVATE
+target_link_libraries(master-debug PUBLIC
     pico_stdlib 
     hardware_gpio
     hardware_clocks

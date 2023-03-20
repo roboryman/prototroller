@@ -8,6 +8,7 @@
 // "Prototroller Debug" configuration.
 // To flash: Ctrl+Shift+B Or select "Run Task" from terminal menu and select "Prototroller Flash".
 // NOTE: "Run without debugging" doesn't with with Cortex Debug, use the flash task instead.
+// IMPORTANT: Make sure to edit the path to your Pico SDK in settings.json (cmake environment) and launch.json (svdFile)
 {
     "version": "2.0.0",
     "tasks": [
