@@ -6,7 +6,7 @@
 #include "hardware/gpio.h"
 
 //-- Slave Selection --//
-#define MAX_MODULES             2
+#define MAX_MODULES             20
 #define NO_SLAVE_SELECTED_CSN   34
 
 //-- Handshake Identifiers --//
