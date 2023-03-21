@@ -94,20 +94,27 @@ uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
 
 enum
 {
-  //ITF_NUM_CDC_0 = 0,
-  //ITF_NUM_CDC_0_DATA,
+  // HID + CDC
+  ITF_NUM_CDC_0 = 0,
+  ITF_NUM_CDC_0_DATA,
   ITF_NUM_HID,
   ITF_NUM_TOTAL
+
+  // HID
+  //ITF_NUM_HID,
+  //ITF_NUM_TOTAL
 };
 
-//#define  CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN)
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
+// HID + CDC
+#define EPNUM_CDC_0_NOTIF   0x81
+#define EPNUM_CDC_0_OUT     0x02
+#define EPNUM_CDC_0_IN      0x82
+#define EPNUM_HID           0x83
+#define  CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN)
 
-// #define EPNUM_CDC_0_NOTIF   0x81
-// #define EPNUM_CDC_0_OUT     0x02
-// #define EPNUM_CDC_0_IN      0x82
-// #define EPNUM_HID           0x83
-#define EPNUM_HID           0x81
+// HID Only
+//#define EPNUM_HID           0x81
+//#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
 
 uint8_t const desc_configuration[] =
 {
@@ -118,7 +125,7 @@ uint8_t const desc_configuration[] =
   TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 5),
 
   // CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
-  //TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_0, 4, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
+  TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_0, 4, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
 };
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR

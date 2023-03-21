@@ -8,103 +8,111 @@
 #include "bsp/board.h"
 #include "../../prototroller.h"
 
-#define MOUSE_SENS 5
-#define NUM_JOYSTICKS 3
-/* Enumerations */
+// Uncomment to run in debug mode
+#define DEBUG 0
+
+//--------------------------------------------------------------------+
+// Types and Enums
+//--------------------------------------------------------------------+
+
+// Enum for times
 enum
 {
-  BLINK_NOT_MOUNTED = 250,
-  BLINK_MOUNTED = 1000,
-  BLINK_SUSPENDED = 2500,
+    BLINK_NOT_MOUNTED = 250,
+    BLINK_MOUNTED = 1000,
+    BLINK_SUSPENDED = 2500,
 };
 
+// Module ID type
 typedef enum {
-    DISCONNECTED,
+    DISCONNECTED = 0,
     BUTTON_MODULE,
     JOYSTICK_MODULE
 } moduleID_t;
 
+// Module string descriptors matching indexing for moduleID_t
 const char module_names[][20] =
-    {
-        "DISCONNECTED",
-        "BUTTON MODULE",
-        "JOYSTICK MODULE"
-    };
+{
+    "DISCONNECTED",
+    "BUTTON MODULE",
+    "JOYSTICK MODULE"
+};
 
-/* Rescan debouncing */
-volatile bool rescan = false;
-volatile unsigned long time = to_ms_since_boot(get_absolute_time());
-const int delay = 50; // Rescan button debounce delay
-
-/* TinyUSB mounted blink interval */
-static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
-
-/* Current Module Counts for data formatting */
-uint8_t numButtons = 0;
-uint8_t numJoysticks = 0;
-
-/* Prototroller HID Gamepad Report
-   Must support the maximum number of each input module per column.
-*/
+// Prototroller HID Gamepad Report
+// Must support the maximum number of each input module per column
 typedef struct
 {
     uint16_t    digitals;   // Digital inputs (momentary button, maintained button, D-pad, XYAB, etc.)
     int16_t     analogs[8]; // Analog inputs (joystick, slider, twist switch, etc.)
 } gamepad_report_t;
 
+
+//--------------------------------------------------------------------+
+// Globals
+//--------------------------------------------------------------------+
+
+// Gamepad reports for each column
 gamepad_report_t gamepad_report_col_0;
 gamepad_report_t gamepad_report_col_1;
 gamepad_report_t gamepad_report_col_2;
 gamepad_report_t gamepad_report_col_3;
 gamepad_report_t gamepad_report_col_4;
 
-volatile bool reportSent = false;
-
-/* Prototypes */
-void led_blinking_task(void);
-void hid_task(void);
-
-/* SPI Master */
+// SPI Master
 SPIMaster master(
-        spi_default,
-        MASTER_SPI_TX_PIN,
-        MASTER_SPI_RX_PIN,
-        MASTER_SPI_SCK_PIN,
-        MASTER_SPI_CSN_PIN,
-        false
-    );
+    spi_default,
+    MASTER_SPI_TX_PIN,
+    MASTER_SPI_RX_PIN,
+    MASTER_SPI_SCK_PIN,
+    MASTER_SPI_CSN_PIN,
+    false
+);
 
-/* Buffers */
+// SPI Transaction Buffers
 uint8_t out_buf[BUF_LEN];
 uint8_t in_buf[BUF_LEN];
 
-/* Module state data store */
+// Module Identification Data Store
 moduleID_t module_IDs[MAX_MODULES] = {DISCONNECTED};
 
+// Rescan ISR flag
+volatile bool rescan = false;
 
-/* rescan_callback
- * Interrupt for the rescan button.
- * Sets a flag to execute a rescan on the next modules_task() call.
- * Debounced to the value of delay.
- */
-void rescan_callback(uint gpio, uint32_t events)
-{
-    if((to_ms_since_boot(get_absolute_time()) - time) > delay && !rescan)
-    {
-        // Set the interrupt time
-        time = to_ms_since_boot(get_absolute_time());
+// Rescan debounce timer
+volatile unsigned long time = to_ms_since_boot(get_absolute_time());
 
-        // Set the rescan flag
-        rescan = true;
-    }
-}
+// Rescan debounce delay (in ms)
+const int delay = 50;
 
-/* printbuf
- * Args: buffer to print, length of buffer
- * Description: Prints a buffer.
- * WARNING: THIS WILL IMPACT SPI OPERATION ON THE SLAVE.
- * PROBABLY THE MASTER TOO.
- */
+// Blink interval in ms for LED blinking task
+static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
+
+//--------------------------------------------------------------------+
+// Prototypes
+//--------------------------------------------------------------------+
+
+void printbuf(uint8_t buf[], size_t len);
+void rescan_modules();
+void init_gpio();
+void send_hid_report(uint8_t report_id);
+void tud_mount_cb(void);
+void tud_umount_cb(void);
+void tud_suspend_cb(bool remote_wakeup_en);
+void tud_resume_cb(void);
+void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_t len);
+uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
+void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize);
+void rescan_cb(uint gpio, uint32_t events);
+void hid_task(void);
+void led_blinking_task(void);
+void modules_task(void);
+
+//--------------------------------------------------------------------+
+// Helpers
+//--------------------------------------------------------------------+
+
+// Outputs contents of a buffer to standard output.
+// WARNING: THIS WILL IMPACT SPI OPERATION.
 void printbuf(uint8_t buf[], size_t len)
 {
     int i;
@@ -121,17 +129,10 @@ void printbuf(uint8_t buf[], size_t len)
     }
 }
 
-/* rescan_modules
- * Args: None
- * Description: Rescan the protogrid for active modules.
- * Update the module identification to disconnected
- * or a unique module specifier.
- */
+// Rescans for connected modules and update identification.
 void rescan_modules()
 {
     printf("[!] Rescanning for active modules...\n");
-    numButtons = 0;
-    numJoysticks = 0;
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
         // Select the current (potentially connected) module
@@ -146,18 +147,6 @@ void rescan_modules()
         // Update the module identification in the internal data store
         module_IDs[module] = identification;
 
-        // switch (identification)
-        // {
-        // case BUTTON_MODULE:
-        //     numButtons += 1;
-        //     break;
-        
-        // case JOYSTICK_MODULE:
-        //     numJoysticks +=1;
-        // default:
-        //     break;
-        // }
-
         char status = (identification == DISCONNECTED) ? 'x' : '!';
 
         printf("[%c] Module %u is identified as ", status, module);
@@ -169,9 +158,10 @@ void rescan_modules()
     rescan = false;
 }
 
+// Initializes GPIO and setup interrupts
 void init_gpio()
 {
-    // Initialize GPIO pins for CSNs
+    // Initialize GPIO for SPI CSNs
     for(uint8_t pin = MASTER_CSN_START_PIN; pin <= MASTER_CSN_END_PIN; pin++)
     {
         gpio_init(pin);
@@ -180,7 +170,7 @@ void init_gpio()
         gpio_put(pin, 1);
     }
 
-    // Initialize GPIO pin for rescan button
+    // Initialize GPIO for rescan button
     gpio_init(MASTER_RESCAN_PIN);
     gpio_set_dir(MASTER_RESCAN_PIN, false);
     gpio_set_pulls(MASTER_RESCAN_PIN, false, false);
@@ -199,21 +189,227 @@ void init_gpio()
     gpio_set_pulls(MASTER_LED_B_PIN, false, false);
     gpio_put(MASTER_LED_B_PIN, 1);
 
-    //Setup the rescan callback
+    // Setup the rescan callback
     gpio_set_irq_enabled_with_callback(
         MASTER_RESCAN_PIN,
         GPIO_IRQ_EDGE_RISE,
         true,
-        &rescan_callback
+        &rescan_cb
     );
 
-    // Debug past here.
+    #if defined(DEBUG)
     gpio_init(15);
     gpio_set_dir(15, false);
     gpio_set_pulls(15, false, false);
+    #endif
 }
 
-void modules_task()
+// Send a gamepad report for the report id / column
+void send_hid_report(uint8_t report_id)
+{
+    // Skip sending this report if the HID endpoint is not ready
+    if ( !tud_hid_ready() ) return;
+
+    // Send the appropraite gamepad report based on the report ID (column)
+    switch(report_id)
+    {
+        case REPORT_ID_COLUMN_0:
+        {
+            tud_hid_report(REPORT_ID_COLUMN_0, &gamepad_report_col_0, sizeof(gamepad_report_col_0));
+        }
+        break;
+
+        case REPORT_ID_COLUMN_1:
+        {
+            tud_hid_report(REPORT_ID_COLUMN_1, &gamepad_report_col_1, sizeof(gamepad_report_col_1));
+        }
+        break;
+
+        case REPORT_ID_COLUMN_2:
+        {
+            tud_hid_report(REPORT_ID_COLUMN_2, &gamepad_report_col_2, sizeof(gamepad_report_col_2));
+        }
+        break;
+
+        case REPORT_ID_COLUMN_3:
+        {
+            tud_hid_report(REPORT_ID_COLUMN_3, &gamepad_report_col_3, sizeof(gamepad_report_col_3));
+        }
+        break;
+
+        case REPORT_ID_COLUMN_4:
+        {
+            tud_hid_report(REPORT_ID_COLUMN_4, &gamepad_report_col_4, sizeof(gamepad_report_col_4));
+        }
+        break;
+
+        default: break;
+    }
+}
+
+
+//--------------------------------------------------------------------+
+// Callbacks
+//--------------------------------------------------------------------+
+
+// Invoked when USB device is mounted
+void tud_mount_cb(void)
+{
+  blink_interval_ms = BLINK_MOUNTED;
+}
+
+// Invoked when USB device is unmounted
+void tud_umount_cb(void)
+{
+  blink_interval_ms = BLINK_NOT_MOUNTED;
+}
+
+// Invoked when USB bus is suspended
+// remote_wakeup_en : if host allow us to perform remote wakeup
+// Within 7ms, device must draw an average of current less than 2.5 mA from bus
+void tud_suspend_cb(bool remote_wakeup_en)
+{
+  (void)remote_wakeup_en;
+  blink_interval_ms = BLINK_SUSPENDED;
+}
+
+// Invoked when USB bus is resumed
+void tud_resume_cb(void)
+{
+  blink_interval_ms = BLINK_MOUNTED;
+}
+
+// Invoked when a column report is successfully sent to host
+// Note: For composite reports, report[0] is report ID
+void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_t len)
+{
+    (void)instance;
+    (void)len;
+
+    uint8_t next_report_id = report[0] + 1u;
+
+    if (next_report_id < REPORT_ID_COLUMN_COUNT)
+    {
+        send_hid_report(next_report_id);
+    }
+}
+
+// Invoked when received GET_REPORT control request
+// Application must fill buffer report's content and return its length.
+// Return zero will cause the stack to STALL request
+uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+{
+    // TODO not implemented
+    (void)instance;
+    (void)report_id;
+    (void)report_type;
+    (void)buffer;
+    (void)reqlen;
+
+    return 0;
+}
+
+// Invoked when received SET_REPORT control request or
+// received data on OUT endpoint ( Report ID = 0, Type = 0 )
+void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize)
+{
+    // TODO not implemented
+    (void) instance;
+
+    /*
+    if (report_type == HID_REPORT_TYPE_OUTPUT)
+    {
+        // Set keyboard LED e.g Capslock, Numlock etc...
+        if (report_id == REPORT_ID_KEYBOARD)
+        {
+            // bufsize should be (at least) 1
+            if ( bufsize < 1 ) return;
+
+            uint8_t const kbd_leds = buffer[0];
+
+            if (kbd_leds & KEYBOARD_LED_CAPSLOCK)
+            {
+                // Capslock On: disable blink, turn led on
+                blink_interval_ms = 0;
+                board_led_write(true);
+            }
+            else
+            {
+                // Caplocks Off: back to normal blink
+                board_led_write(false);
+                blink_interval_ms = BLINK_MOUNTED;
+            }
+        }
+    }
+    */
+
+}
+
+// Invoked when the user presses rescan button. Debounced to the value of delay.
+void rescan_cb(uint gpio, uint32_t events)
+{
+    if((to_ms_since_boot(get_absolute_time()) - time) > delay && !rescan)
+    {
+        // Set the interrupt time
+        time = to_ms_since_boot(get_absolute_time());
+
+        // Set the rescan interrupt flag
+        rescan = true;
+    }
+}
+
+
+//--------------------------------------------------------------------+
+// Tasks
+//--------------------------------------------------------------------+
+
+// Task to kick-off the HID report chain
+void hid_task(void)
+{
+    // Poll every 10ms
+    // Must be longer than it takes to send all 5 reports
+    const uint32_t interval_ms = 10;
+    static uint32_t start_ms = 0;
+
+    if ( board_millis() - start_ms < interval_ms) return;
+
+    start_ms += interval_ms;
+
+    // Remote wakeup
+    if ( tud_suspended() )
+    {
+        // Wake up host if we are in suspend mode and REMOTE_WAKEUP feature is enabled by host
+        tud_remote_wakeup();
+    }
+    else
+    {
+        // Kick-off the report chain here, starting with the first column
+        send_hid_report(REPORT_ID_COLUMN_0);
+    }
+}
+
+// Task to blink an LED
+void led_blinking_task(void)
+{
+    static uint32_t start_ms = 0;
+    static bool led_state = false;
+
+    // blink is disabled
+    if (!blink_interval_ms) return;
+
+    // Blink every interval ms
+    if ( board_millis() - start_ms < blink_interval_ms) return; // not enough time
+
+    start_ms += blink_interval_ms;
+
+    board_led_write(led_state);
+    led_state = 1 - led_state; // toggle
+
+    printf("LED blinked!\n");
+}
+
+// Task to handshake and exchange data with modules over SPI, rescan, update gamepad reports, etc.
+void modules_task(void)
 {
     // If the user executed a rescan interrupt, do that here
     if(rescan)
@@ -348,7 +544,7 @@ void modules_task()
         gpio_put(MASTER_LED_G_PIN, 1);
     }
 
-    // Debug only past here.
+    #if defined(DEBUG)
     if(!gpio_get(15))
     {
         gamepad_report_col_0.analogs[0] = -1000;
@@ -371,224 +567,56 @@ void modules_task()
         gamepad_report_col_4.analogs[1] = 1000;
         gamepad_report_col_4.digitals |= 0x01;
     }
+    #endif
 }
 
+
+//--------------------------------------------------------------------+
+// Main
+//--------------------------------------------------------------------+
+
 int main() {
-    // Sleep for module initialization and time to setup console
+    // Sleep for module initialization and time to setup serial console
     //sleep_ms(5000);
+    // NOTE: leaving this uncommented is probably why we sometimes see no connected
+    // modules on reset, because we aren't giving the mod boards enough time to set up
+    // and wait for master to initiate a SPI transaction.
     
+    // Initialize the board
     board_init();
+    // NOTE: what exactly this does could use some further investigation
+
+    // Initialize TinyUSB
     tud_init(BOARD_TUD_RHPORT);
+    // NOTE: sleeps after tusb_init() or tud_init() appear to cause the USB mount to fail.
 
+    // Initialize standard I/O
     //stdio_init_all(); // Use w/o TinyUSB
-    //stdio_usb_init(); // Use w/ TinyUSB
-
-    // NOTE: sleeps after tusb_init() appear to cause the USB mount to fail.
-    //sleep_ms(5000);
-
+    stdio_usb_init(); // Use w/ TinyUSB
     printf("MASTER INITIALIZATION PROCEDURE\n");
     printf("===============================\n");
 
-    // Initialize SPI Stuff
+    // Initialize SPI
     master.MasterInit();
-
     printf("[!] Master SPI Initialized\n");
 
-    // Initialize all GPIO
+    // Initialize GPIO
     init_gpio();
-
     printf("[!] Master GPIO Initialized\n");
 
-    // Initial rescan
+    // Initial scan for modules
     rescan_modules();
     
+    // Infinite task loop
     while(true) {
         tud_task();
+
         modules_task();
+
+        #if defined(DEBUG)
         led_blinking_task();
+        #endif
+
         hid_task();
     }
-}
-
-
-//--------------------------------------------------------------------+
-// Device callbacks
-//--------------------------------------------------------------------+
-
-// Invoked when device is mounted
-void tud_mount_cb(void)
-{
-  blink_interval_ms = BLINK_MOUNTED;
-}
-
-// Invoked when device is unmounted
-void tud_umount_cb(void)
-{
-  blink_interval_ms = BLINK_NOT_MOUNTED;
-}
-
-// Invoked when usb bus is suspended
-// remote_wakeup_en : if host allow us  to perform remote wakeup
-// Within 7ms, device must draw an average of current less than 2.5 mA from bus
-void tud_suspend_cb(bool remote_wakeup_en)
-{
-  (void)remote_wakeup_en;
-  blink_interval_ms = BLINK_SUSPENDED;
-}
-
-// Invoked when usb bus is resumed
-void tud_resume_cb(void)
-{
-  blink_interval_ms = BLINK_MOUNTED;
-}
-
-//--------------------------------------------------------------------+
-// USB HID
-//--------------------------------------------------------------------+
-
-static void send_hid_report(uint8_t report_id)
-    {
-        // skip if hid is not ready yet
-        if ( !tud_hid_ready() ) return;
-
-        // Send the appropraite gamepad report based on the report ID (column)
-        switch(report_id)
-        {
-            case REPORT_ID_COLUMN_0:
-            {
-                tud_hid_report(REPORT_ID_COLUMN_0, &gamepad_report_col_0, sizeof(gamepad_report_col_0));
-            }
-            break;
-
-            case REPORT_ID_COLUMN_1:
-            {
-                tud_hid_report(REPORT_ID_COLUMN_1, &gamepad_report_col_1, sizeof(gamepad_report_col_1));
-            }
-            break;
-
-            case REPORT_ID_COLUMN_2:
-            {
-                tud_hid_report(REPORT_ID_COLUMN_2, &gamepad_report_col_2, sizeof(gamepad_report_col_2));
-            }
-            break;
-
-            case REPORT_ID_COLUMN_3:
-            {
-                tud_hid_report(REPORT_ID_COLUMN_3, &gamepad_report_col_3, sizeof(gamepad_report_col_3));
-            }
-            break;
-
-            case REPORT_ID_COLUMN_4:
-            {
-                tud_hid_report(REPORT_ID_COLUMN_4, &gamepad_report_col_4, sizeof(gamepad_report_col_4));
-            }
-            break;
-
-            default: break;
-        }
-    }
-
-void hid_task(void)
-{
-    // Poll every 10ms
-    // Must be longer than it takes to send all 5 reports
-    const uint32_t interval_ms = 10;
-    static uint32_t start_ms = 0;
-
-    if ( board_millis() - start_ms < interval_ms) return;
-    start_ms += interval_ms;
-
-    // Remote wakeup
-    if ( tud_suspended() )
-    {
-        // Wake up host if we are in suspend mode and REMOTE_WAKEUP feature is enabled by host
-        tud_remote_wakeup();
-    }
-    else
-    {
-        // Kick-off the report chain here, starting with the first column
-        send_hid_report(REPORT_ID_COLUMN_0);
-    }
-}
-
-// Invoked when a column report is successfully sent to host
-// Note: For composite reports, report[0] is report ID
-void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_t len)
-{
-    (void)instance;
-    (void)len;
-
-    uint8_t next_report_id = report[0] + 1u;
-
-    if (next_report_id < REPORT_ID_COLUMN_COUNT)
-    {
-        send_hid_report(next_report_id);
-    }
-}
-
-// Invoked when received GET_REPORT control request
-// Application must fill buffer report's content and return its length.
-// Return zero will cause the stack to STALL request
-uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
-{
-  // TODO not implemented
-  (void)instance;
-  (void)report_id;
-  (void)report_type;
-  (void)buffer;
-  (void)reqlen;
-
-  return 0;
-}
-
-// Invoked when received SET_REPORT control request or
-// received data on OUT endpoint ( Report ID = 0, Type = 0 )
-void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize)
-{
-    // TODO not implemented
-    (void) instance;
-
-    // if (report_type == HID_REPORT_TYPE_OUTPUT)
-    // {
-    //     // Set keyboard LED e.g Capslock, Numlock etc...
-    //     if (report_id == REPORT_ID_KEYBOARD)
-    //     {
-    //         // bufsize should be (at least) 1
-    //         if ( bufsize < 1 ) return;
-
-    //         uint8_t const kbd_leds = buffer[0];
-
-    //         if (kbd_leds & KEYBOARD_LED_CAPSLOCK)
-    //         {
-    //             // Capslock On: disable blink, turn led on
-    //             blink_interval_ms = 0;
-    //             board_led_write(true);
-    //         }
-    //         else
-    //         {
-    //             // Caplocks Off: back to normal blink
-    //             board_led_write(false);
-    //             blink_interval_ms = BLINK_MOUNTED;
-    //         }
-    //     }
-    // }
-}
-
-//--------------------------------------------------------------------+
-// BLINKING TASK
-//--------------------------------------------------------------------+
-void led_blinking_task(void)
-{
-    static uint32_t start_ms = 0;
-    static bool led_state = false;
-
-    // blink is disabled
-    if (!blink_interval_ms) return;
-
-    // Blink every interval ms
-    if ( board_millis() - start_ms < blink_interval_ms) return; // not enough time
-    start_ms += blink_interval_ms;
-
-    board_led_write(led_state);
-    led_state = 1 - led_state; // toggle
 }
