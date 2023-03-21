@@ -14,7 +14,7 @@ SPISlave spi(
     MODULE_SPI_RX_PIN,
     MODULE_SPI_SCK_PIN,
     MODULE_SPI_CSN_PIN,
-    JOYSTICK_IDENTITY
+    JOYSTICK
 );
 
 // Declare and initialize buffers
@@ -61,7 +61,7 @@ int main() {
 
     //stdio_init_all();
 
-    printf("JOYSTICK MODULE\n");
+    printf("%s\n", module_names[JOYSTICK]);
 
     // Setup the chip select callback
     // gpio_set_irq_enabled_with_callback(

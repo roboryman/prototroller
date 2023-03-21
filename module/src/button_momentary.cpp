@@ -13,7 +13,7 @@ SPISlave spi(
     MODULE_SPI_RX_PIN,
     MODULE_SPI_SCK_PIN,
     MODULE_SPI_CSN_PIN,
-    BUTTON_IDENTITY
+    BUTTON_MOMENTARY
 );
 
 // Declare and initialize buffers
@@ -25,7 +25,7 @@ int main() {
 
     //stdio_init_all();
 
-    printf("BUTTON MODULE\n");
+    printf("%s\n", module_names[BUTTON_MOMENTARY]);
 
     // Emable SPI0 at 1 MHz and connect to GPIOs
     spi.SlaveInit();

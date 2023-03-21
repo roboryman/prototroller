@@ -11,8 +11,6 @@
 
 //-- Module Identifiers --//
 #define VERIFY_BYTE         0x55
-#define BUTTON_IDENTITY     0x01
-#define JOYSTICK_IDENTITY   0x02
 
 class SPISlave
 {

@@ -21,21 +21,7 @@ enum
     BLINK_NOT_MOUNTED = 250,
     BLINK_MOUNTED = 1000,
     BLINK_SUSPENDED = 2500,
-};
-
-// Module ID type
-typedef enum {
-    DISCONNECTED = 0,
-    BUTTON_MODULE,
-    JOYSTICK_MODULE
-} moduleID_t;
-
-// Module string descriptors matching indexing for moduleID_t
-const char module_names[][20] =
-{
-    "DISCONNECTED",
-    "BUTTON MODULE",
-    "JOYSTICK MODULE"
+    PRINT_REPORT_DELAY = 2000,
 };
 
 // Prototroller HID Gamepad Report
@@ -84,14 +70,18 @@ volatile unsigned long time = to_ms_since_boot(get_absolute_time());
 // Rescan debounce delay (in ms)
 const int delay = 50;
 
-// Blink interval in ms for LED blinking task
+// Interval in ms for LED blinking task
 static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
+
+// Interval in ms for report message task
+static uint32_t report_message_interval_ms = PRINT_REPORT_DELAY;
 
 //--------------------------------------------------------------------+
 // Prototypes
 //--------------------------------------------------------------------+
 
-void printbuf(uint8_t buf[], size_t len);
+void print_buf(uint8_t buf[], size_t len);
+void print_report(uint8_t report_id, gamepad_report_t *report);
 void rescan_modules();
 void init_gpio();
 void send_hid_report(uint8_t report_id);
@@ -105,6 +95,7 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 void rescan_cb(uint gpio, uint32_t events);
 void hid_task(void);
 void led_blinking_task(void);
+void print_report_task(void);
 void modules_task(void);
 
 //--------------------------------------------------------------------+
@@ -112,8 +103,8 @@ void modules_task(void);
 //--------------------------------------------------------------------+
 
 // Outputs contents of a buffer to standard output.
-// WARNING: THIS WILL IMPACT SPI OPERATION.
-void printbuf(uint8_t buf[], size_t len)
+// WARNING: THIS MAY IMPACT SPI OPERATION.
+void print_buf(uint8_t buf[], size_t len)
 {
     int i;
     for (i = 0; i < len; ++i) {
@@ -127,6 +118,25 @@ void printbuf(uint8_t buf[], size_t len)
     if (i % 16) {
         putchar('\n');
     }
+}
+
+// Outputs contents of a gamepad report to standard output.
+// WARNING: THIS MAY IMPACT SPI OPERATION.
+void print_report(uint8_t report_id, gamepad_report_t *report)
+{
+    printf("===========================\n");
+    printf("GAMEPAD REPORT FOR COLUMN %01d\n", report_id);
+    printf("===========================\n");
+
+    printf("DIGITALS       : 0x%04x (%u)\n", report->digitals, report->digitals);
+
+    printf("ANALOGS[0..7]  ");
+    for(unsigned int i = 0; i < (sizeof(report->analogs) / sizeof(report->analogs[0])); i++)
+    {
+        printf(": 0x%04x (%d)", (unsigned int)(uint16_t)report->analogs[i], report->analogs[i]);
+    }
+
+    printf("\n\n");
 }
 
 // Rescans for connected modules and update identification.
@@ -397,15 +407,33 @@ void led_blinking_task(void)
     // blink is disabled
     if (!blink_interval_ms) return;
 
-    // Blink every interval ms
+    // Blink every blink_interval_ms ms
     if ( board_millis() - start_ms < blink_interval_ms) return; // not enough time
 
     start_ms += blink_interval_ms;
 
     board_led_write(led_state);
-    led_state = 1 - led_state; // toggle
+    led_state = 1 - led_state;
+}
 
-    printf("LED blinked!\n");
+// Task to routinely print gamepad reports
+void print_report_task(void)
+{
+    static uint32_t start_ms = 0;
+
+    // Printing reports is disabled
+    if (!report_message_interval_ms) return;
+
+    // Print a report every report_message_interval_ms ms
+    if ( board_millis() - start_ms < report_message_interval_ms) return; // not enough time
+
+    start_ms += report_message_interval_ms;
+
+    print_report(REPORT_ID_COLUMN_0, &gamepad_report_col_0);
+    print_report(REPORT_ID_COLUMN_1, &gamepad_report_col_1);
+    print_report(REPORT_ID_COLUMN_2, &gamepad_report_col_2);
+    print_report(REPORT_ID_COLUMN_3, &gamepad_report_col_3);
+    print_report(REPORT_ID_COLUMN_4, &gamepad_report_col_4);
 }
 
 // Task to handshake and exchange data with modules over SPI, rescan, update gamepad reports, etc.
@@ -481,7 +509,8 @@ void modules_task(void)
             // Process module output from in_buf based on the module identifier
             switch(module_IDs[module])
             {
-                case BUTTON_MODULE:
+                case BUTTON_MAINTAINED:
+                case BUTTON_MOMENTARY:
                     {
                         // If the button (active-low) is pressed, mask a bit
                         if(in_buf[0] == 0x00) {
@@ -496,7 +525,7 @@ void modules_task(void)
 
                     break;
                 
-                case JOYSTICK_MODULE:
+                case JOYSTICK:
                     {
                         // Joystick data is 12-bits
                         uint16_t x = (in_buf[1] << 8) | in_buf[0];
@@ -616,6 +645,8 @@ int main() {
         #if defined(DEBUG)
         led_blinking_task();
         #endif
+
+        print_report_task();
 
         hid_task();
     }
