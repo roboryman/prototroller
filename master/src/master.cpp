@@ -44,19 +44,12 @@ uint8_t numButtons = 0;
 uint8_t numJoysticks = 0;
 
 /* Prototroller HID Gamepad Report
-   Must support the maximum number of each input module; for a 4x5 grid:
-   20 1x1 Button (Momentary AND Maintained)
-   20 1x1 Joystick
-   20 1x1 Potentiometer [TODO]
-   10 1x2 Slider [TODO]
-   04 2x2 D-pad [TODO]
-   04 2x2 XYAB-pad [TODO]
+   Must support the maximum number of each input module per column.
 */
 typedef struct
 {
-    //uint8_t     report_id;  // Report ID, TinyUSB already accounts for this
-    uint16_t    buttons;   // Masks for currently pressed buttons
-    int16_t     analog[8];
+    uint16_t    digitals;   // Digital inputs (momentary button, maintained button, D-pad, XYAB, etc.)
+    int16_t     analogs[8]; // Analog inputs (joystick, slider, twist switch, etc.)
 } gamepad_report_t;
 
 gamepad_report_t gamepad_report_col_0;
@@ -90,10 +83,8 @@ moduleID_t module_IDs[MAX_MODULES] = {DISCONNECTED};
 
 
 /* rescan_callback
- * Args: gpio, events
- * Description: Interrupt for the rescan button.
- * Sets the rescan flag so a rescan is executed on the next
- * modules_task() call.
+ * Interrupt for the rescan button.
+ * Sets a flag to execute a rescan on the next modules_task() call.
  * Debounced to the value of delay.
  */
 void rescan_callback(uint gpio, uint32_t events)
@@ -224,6 +215,7 @@ void init_gpio()
 
 void modules_task()
 {
+    // If the user executed a rescan interrupt, do that here
     if(rescan)
     {
         rescan_modules();
@@ -240,31 +232,41 @@ void modules_task()
     bool connectedModules = false;
 
     // Track how many specific modules as we poll each slot
-    uint8_t buttonIndex = 0;
-    uint8_t analogIndex = 0;
+    uint8_t digitalCount = 0;
+    uint8_t analogCount = 0;
+
+    // The gamepad report for the current column
+    gamepad_report_t *column_report = &gamepad_report_col_0;
 
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
-        gamepad_report_t *column_report;
+        // Reset digital and analog count for each column report
+        if(module % 4 == 0)
+        {
+            digitalCount = 0;
+            analogCount  = 0;
+        }
 
-        if      (module < 4) column_report = &gamepad_report_col_0;
-        else if (module < 8) column_report = &gamepad_report_col_1;
-        else if(module < 12) column_report = &gamepad_report_col_2;
-        else if(module < 16) column_report = &gamepad_report_col_3;
-        else if(module < 20) column_report = &gamepad_report_col_4;
+        // If this is the beginning of a new column report, set the struct accordingly
+        if     (module == 4)  column_report = &gamepad_report_col_1;
+        else if(module == 8)  column_report = &gamepad_report_col_2;
+        else if(module == 12) column_report = &gamepad_report_col_3;
+        else if(module == 16) column_report = &gamepad_report_col_4;
         
+
         //printf("Scanning protogrid for new data...\n");
         if(module_IDs[module])
         {
             // Current module is connected.
 
-            // Process module input into out_buf
+            // Process output data into out_buf
+            //bool valid = master.MasterWrite(out_buf, in_buf, BUF_LEN);
             // ... TBD
 
-            // Select the module
+            // Select the module over SPI
             master.SlaveSelect(module);
 
-            // Read module data
+            // Read module data over SPI
             bool valid = master.MasterRead(out_buf, in_buf, BUF_LEN);
 
             // If read is invalid, set the module as disconnected
@@ -280,18 +282,18 @@ void modules_task()
             // Deselect the module
             master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
 
-            // Process module output from in_buf
+            // Process module output from in_buf based on the module identifier
             switch(module_IDs[module])
             {
                 case BUTTON_MODULE:
                     {
                         // If the button (active-low) is pressed, mask a bit
                         if(in_buf[0] == 0x00) {
-                            column_report->buttons |= (1 << buttonIndex); 
+                            column_report->digitals |= (1 << digitalCount); 
                         }
 
-                        // Increment the button index
-                        buttonIndex++;
+                        // Increment the number of digital inputs for this column
+                        digitalCount++;
 
                         printf("Button: %d\n", in_buf[0]);
                     }
@@ -300,39 +302,20 @@ void modules_task()
                 
                 case JOYSTICK_MODULE:
                     {
-                        // Convert the joystick data
+                        // Joystick data is 12-bits
                         uint16_t x = (in_buf[1] << 8) | in_buf[0];
                         uint16_t y = (in_buf[3] << 8) | in_buf[2];
+
+                        // Convert data into signed holders between -2048 and 2047
                         int16_t delta_x = (int16_t) (x - 2048);
                         int16_t delta_y = (int16_t) (y - 2048);
 
-                        // switch(joystickIndex)
-                        // {
-                        //     case 0:
-                        //         //gamepad_report.x1 = delta_x;
-                        //         //gamepad_report.y1 = delta_x
-                        //         //gamepad_report.z1 = 0;
-                        //         break;
-                            
-                        //     case 1:
-                        //         //gamepad_report.x2 = delta_x;
-                        //         //gamepad_report.y2 = delta_y;
-                        //         //gamepad_report.z2 = 0;
-                        //         break;
+                        // Assign the joystick data to two analog axes
+                        column_report->analogs[analogCount]   = delta_x;
+                        column_report->analogs[analogCount+1] = delta_y;
 
-                        //     default:
-                        //         // Cannot support more than 2 joysticks atm (hard gamepad report limits)
-                        //         // BUT: could assign joysticks after the 2nd to other things, such as
-                        //         // mouse, keyboard, generic I/O, etc.
-                        //         // OR: Investigate sending multicollections (would need 10 for 2 joysticks each)
-                        //         break;
-                        // }
-
-                        column_report->analog[analogIndex]   = delta_x;
-                        column_report->analog[analogIndex+1] = delta_y;
-
-                        // Increment the analog index by 2 (two joystic axes)
-                        analogIndex += 2;
+                        // Add 2 to the number of analog inputs for this column
+                        analogCount += 2;
 
                         //printbuf(in_buf, BUF_LEN);
                         printf("Delta X: %d\n",   delta_x);
@@ -368,25 +351,25 @@ void modules_task()
     // Debug only past here.
     if(!gpio_get(15))
     {
-        gamepad_report_col_0.analog[0] = -1000;
-        gamepad_report_col_0.analog[1] = 1000;
-        gamepad_report_col_0.buttons |= 0x01;
+        gamepad_report_col_0.analogs[0] = -1000;
+        gamepad_report_col_0.analogs[1] = 1000;
+        gamepad_report_col_0.digitals |= 0x01;
 
-        gamepad_report_col_1.analog[0] = -1000;
-        gamepad_report_col_1.analog[1] = 1000;
-        gamepad_report_col_1.buttons |= 0x01;
+        gamepad_report_col_1.analogs[0] = -1000;
+        gamepad_report_col_1.analogs[1] = 1000;
+        gamepad_report_col_1.digitals |= 0x01;
 
-        gamepad_report_col_2.analog[0] = -1000;
-        gamepad_report_col_2.analog[1] = 1000;
-        gamepad_report_col_2.buttons |= 0x01;
+        gamepad_report_col_2.analogs[0] = -1000;
+        gamepad_report_col_2.analogs[1] = 1000;
+        gamepad_report_col_2.digitals |= 0x01;
 
-        gamepad_report_col_3.analog[0] = -1000;
-        gamepad_report_col_3.analog[1] = 1000;
-        gamepad_report_col_3.buttons |= 0x01;
+        gamepad_report_col_3.analogs[0] = -1000;
+        gamepad_report_col_3.analogs[1] = 1000;
+        gamepad_report_col_3.digitals |= 0x01;
 
-        gamepad_report_col_4.analog[0] = -1000;
-        gamepad_report_col_4.analog[1] = 1000;
-        gamepad_report_col_4.buttons |= 0x01;
+        gamepad_report_col_4.analogs[0] = -1000;
+        gamepad_report_col_4.analogs[1] = 1000;
+        gamepad_report_col_4.digitals |= 0x01;
     }
 }
 
@@ -403,18 +386,18 @@ int main() {
     // NOTE: sleeps after tusb_init() appear to cause the USB mount to fail.
     //sleep_ms(5000);
 
-    //printf("MASTER INITIALIZATION PROCEDURE\n");
-    //printf("===============================\n");
+    printf("MASTER INITIALIZATION PROCEDURE\n");
+    printf("===============================\n");
 
     // Initialize SPI Stuff
     master.MasterInit();
 
-    //printf("[!] Master SPI Initialized\n");
+    printf("[!] Master SPI Initialized\n");
 
     // Initialize all GPIO
     init_gpio();
 
-    //printf("[!] Master GPIO Initialized\n");
+    printf("[!] Master GPIO Initialized\n");
 
     // Initial rescan
     rescan_modules();
@@ -463,58 +446,12 @@ void tud_resume_cb(void)
 // USB HID
 //--------------------------------------------------------------------+
 
-// Send for each applicable HID profile (gamepad, keyboard, mouse, etc ..)
-// tud_hid_report_complete_cb() is used when the report has completed sending to host
-//void hid_task(void)
-//{
-//     // Remote wakeup (comment out?)
-//     if (tud_suspended())
-//     {
-//         // Wake up host if we are in suspend mode
-//         // and REMOTE_WAKEUP feature is enabled by host
-//         tud_remote_wakeup();
-//     }
-//     // else
-//     // {
-//     //     // Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
-//     //     send_hid_report(REPORT_ID_MOUSE, 0);
-//     // }
-
-//     // Skip sending the reports if HID is not ready yet
-//     if (tud_hid_ready()) {
-//         // Format and send HID report data
-//         // switch (numJoysticks) {
-//         //     //Populate Analog Components Properly
-//         //     case 2:
-//         //         report.z = joystickDeltas[1][0];
-//         //         report.rz = joystickDeltas[1][1];
-//         //         //TODO -- Additional Analog Components (Dials/Sliders) Logic for population (as we have upper limit of 8 analog components on a generic gamepad packet with picoSDK declaration)
-//         //         //Intentional No Break
-//         //     case 1:
-//         //         report.x = joystickDeltas[0][0];
-//         //         report.y = joystickDeltas[0][1];
-//         //         break;
-//         //     default: break;
-//         // }
-//         //report.rx = 0;
-//         //report.ry = 0;
-//         //report.hat = 0; //TODO : D-Pad Values 
-//         //Add button data
-//         //report.buttons = buttons;
-//         // Mouse (from joystick and buttons)
-//         //tud_hid_mouse_report(REPORT_ID_MOUSE, buttons, delta_x, delta_y, 0, 0);
-
-//         //Generic Gamepad
-//         //tud_hid_report(REPORT_ID_GAMEPAD, &gamepad_report, sizeof(gamepad_report));
-//         tud_hid_n_report(0, REPORT_ID_GAMEPAD, &gamepad_report, sizeof(gamepad_report));
-//     }
-// }
-
 static void send_hid_report(uint8_t report_id)
     {
         // skip if hid is not ready yet
         if ( !tud_hid_ready() ) return;
 
+        // Send the appropraite gamepad report based on the report ID (column)
         switch(report_id)
         {
             case REPORT_ID_COLUMN_0:
@@ -564,19 +501,17 @@ void hid_task(void)
     // Remote wakeup
     if ( tud_suspended() )
     {
-        // Wake up host if we are in suspend mode
-        // and REMOTE_WAKEUP feature is enabled by host
+        // Wake up host if we are in suspend mode and REMOTE_WAKEUP feature is enabled by host
         tud_remote_wakeup();
     }
     else
     {
-        // Kick-off the report chain here
+        // Kick-off the report chain here, starting with the first column
         send_hid_report(REPORT_ID_COLUMN_0);
     }
 }
 
-// Invoked when sent REPORT successfully to host
-// Application can use this to send the next report
+// Invoked when a column report is successfully sent to host
 // Note: For composite reports, report[0] is report ID
 void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_t len)
 {
@@ -596,7 +531,7 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_
 // Return zero will cause the stack to STALL request
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
-  // TODO not Implemented
+  // TODO not implemented
   (void)instance;
   (void)report_id;
   (void)report_type;
@@ -610,6 +545,7 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 // received data on OUT endpoint ( Report ID = 0, Type = 0 )
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize)
 {
+    // TODO not implemented
     (void) instance;
 
     // if (report_type == HID_REPORT_TYPE_OUTPUT)
