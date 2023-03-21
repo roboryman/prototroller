@@ -3,18 +3,18 @@
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "hardware/adc.h"
-#include "../libraries/Component.h"
 #include "../libraries/SPISlave.h"
 #include "../../prototroller.h"
 
-Component joystick;
+#define moduleID JOYSTICK
+
 SPISlave spi(
     spi_default,
     MODULE_SPI_TX_PIN,
     MODULE_SPI_RX_PIN,
     MODULE_SPI_SCK_PIN,
     MODULE_SPI_CSN_PIN,
-    JOYSTICK
+    moduleID
 );
 
 // Declare and initialize buffers
@@ -61,7 +61,7 @@ int main() {
 
     //stdio_init_all();
 
-    printf("%s\n", module_names[JOYSTICK]);
+    printf("%s\n", module_names[moduleID]);
 
     // Setup the chip select callback
     // gpio_set_irq_enabled_with_callback(

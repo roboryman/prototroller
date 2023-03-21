@@ -5,7 +5,7 @@
 #include "../libraries/SPISlave.h"
 #include "../../prototroller.h"
 
-#define moduleID BUTTON_MAINTAINED
+#define moduleID DPAD
 
 SPISlave spi(
     spi_default,
@@ -24,10 +24,10 @@ int main() {
     // Initialize SPI as a slave
     spi.SlaveInit();
 
-    // Initialize the active-low button GPIO
-    gpio_init(MODULE_BUTTON_PIN);
-    gpio_set_dir(MODULE_BUTTON_PIN, GPIO_IN);
-    gpio_set_pulls(MODULE_BUTTON_PIN, false, false);
+    // Initialize any needed GPIO
+    // gpio_init(MODULE_???_PIN);
+    // gpio_set_dir(MODULE_???_PIN1, GPIO_IN);
+    // gpio_set_pulls(MODULE_???_PIN1, false, false);
 
     // Wait for identification
     spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
@@ -35,18 +35,13 @@ int main() {
     // After identifier is sent, continually send the GPIO state
     while(true)
     {
-        // Get the active-low button state
-        bool button_state = gpio_get(MODULE_BUTTON_PIN);
+        // Get input
+        //bool button1_state = gpio_get(MODULE_???_PIN1);
 
-        // Set the first byte to the button state
-        out_buf[0] = button_state;
+        // Load into the output buffer
+        //out_buf[0] = button1_state;
 
-        // DEBUG - Set ALL buffer data to the button state
-        // for(uint16_t i = 0; i < BUF_LEN; i++)
-        // {
-        //     out_buf[i] = button_state;
-        // }
-
+        // Sync with the master
         spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
     }
 

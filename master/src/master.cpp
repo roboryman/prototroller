@@ -478,14 +478,23 @@ void modules_task(void)
         else if(module == 16) column_report = &gamepad_report_col_4;
         
 
-        //printf("Scanning protogrid for new data...\n");
+        // If this module is connected, exchange data over SPI and process into column report
         if(module_IDs[module])
         {
-            // Current module is connected.
+            // Process output data into out_buf based on the modile identifier
+            switch(module_IDs[module])
+            {
+                // --- DIGITAL OUTPUTS
+                case LED:
+                    {
+                    // TODO: Forward data from HID to LED module
+                    // out_buf = ...
+                    }
+                    break;
 
-            // Process output data into out_buf
-            //bool valid = master.MasterWrite(out_buf, in_buf, BUF_LEN);
-            // ... TBD
+                default:
+                    break;
+            }
 
             // Select the module over SPI
             master.SlaveSelect(module);
@@ -497,6 +506,9 @@ void modules_task(void)
             if(!valid)
             {
                 module_IDs[module] = DISCONNECTED;
+                printf("Module %u appears to have disconnected or is invalid: ", module);
+                printf(module_names[module_IDs[module]]);
+                printf("\n");
             }
             else
             {
@@ -506,25 +518,43 @@ void modules_task(void)
             // Deselect the module
             master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
 
-            // Process module output from in_buf based on the module identifier
+            // Process module I/O based on the module identifier
             switch(module_IDs[module])
             {
+                // --- DIGITAL INPUTS ---
                 case BUTTON_MAINTAINED:
                 case BUTTON_MOMENTARY:
                     {
                         // If the button (active-low) is pressed, mask a bit
-                        if(in_buf[0] == 0x00) {
-                            column_report->digitals |= (1 << digitalCount); 
-                        }
+                        column_report->digitals |= ((in_buf[0]==0x00) << digitalCount); 
 
                         // Increment the number of digital inputs for this column
                         digitalCount++;
-
-                        printf("Button: %d\n", in_buf[0]);
                     }
 
                     break;
+
+                case XYAB:
+                    {
+                        // Mask any bits
+                        column_report->digitals |= ((in_buf[0]==0x00) << digitalCount); 
+                        column_report->digitals |= ((in_buf[1]==0x00) << (digitalCount+1)); 
+                        column_report->digitals |= ((in_buf[2]==0x00) << (digitalCount+2)); 
+                        column_report->digitals |= ((in_buf[3]==0x00) << (digitalCount+3)); 
+
+                        // Increment the number of digital inputs for this column
+                        digitalCount += 4;
+                    }
+                    break;
+
+                case DPAD:
+                    {
+
+                    }
+                    break;
                 
+
+                // --- ANALOG INPUTS ---
                 case JOYSTICK:
                     {
                         // Joystick data is 12-bits
@@ -541,19 +571,41 @@ void modules_task(void)
 
                         // Add 2 to the number of analog inputs for this column
                         analogCount += 2;
-
-                        //printbuf(in_buf, BUF_LEN);
-                        printf("Delta X: %d\n",   delta_x);
-                        printf("Delta Y: %d\n\n", delta_y);
                     }
 
                     break;
 
-                default:
-                    printf("Module %u appears to have disconnected or is invalid: ", module);
-                    printf(module_names[module_IDs[module]]);
-                    printf("\n");
+                case SLIDER:
+                    {
 
+                    }
+                    break;
+                
+                case TWIST_SWITCH:
+                    {
+
+                    }
+                    break;
+
+                case ACCEL:
+                    {
+                        // Due to 8-axis limit of DirectInput, cannot support a full column of 3/4 accel/gyro (9/12 axes)
+                        // Something like joystick + twist switch + accel + gyro would not work (9 axes)
+                        // However, 2x twist switch + accel + gyro would work (8 axes)
+                        // Or, a slider (1x2) + accel + gyro (7 axes)
+                    }
+                    break;
+
+                case GYRO:
+                    {
+                        // Due to 8-axis limit of DirectInput, cannot support a full column of 3/4 accel/gyro (9/12 axes)
+                        // Something like joystick + twist switch + accel + gyro would not work (9 axes)
+                        // However, 2x twist switch + accel + gyro would work (8 axes)
+                        // Or, a slider (1x2) + accel + gyro (7 axes)
+                    }
+                    break;
+
+                default:
                     break;
             }
 
@@ -576,6 +628,8 @@ void modules_task(void)
     #if defined(DEBUG)
     if(!gpio_get(15))
     {
+        // Mock gamepad reports for each column
+
         gamepad_report_col_0.analogs[0] = -1000;
         gamepad_report_col_0.analogs[1] = 1000;
         gamepad_report_col_0.digitals |= 0x01;

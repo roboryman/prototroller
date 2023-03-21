@@ -3,6 +3,7 @@
 # set(TINYUSB_FAMILY_PROJECT_NAME_PREFIX "tinyusb_dev_")
 add_executable(button_maintained)
 add_executable(button_momentary)
+add_executable(xyab)
 add_executable(joystick)
 
 # target_include_directories(button-module PRIVATE
@@ -14,19 +15,21 @@ add_executable(joystick)
 # )
 
 target_sources(button_maintained PRIVATE
-    libraries/Component.cpp
     libraries/SPISlave.cpp
     src/button_maintained.cpp
 )
 
 target_sources(button_momentary PRIVATE
-    libraries/Component.cpp
     libraries/SPISlave.cpp
     src/button_momentary.cpp
 )
 
+target_sources(xyab PRIVATE
+    libraries/SPISlave.cpp
+    src/xyab.cpp
+)
+
 target_sources(joystick PRIVATE
-    libraries/Component.cpp
     libraries/SPISlave.cpp
     src/joystick.cpp
 )
@@ -36,7 +39,6 @@ target_link_libraries(button_maintained PRIVATE
     pico_binary_info
     hardware_gpio
     hardware_spi
-#    tinyusb_board
 )
 
 target_link_libraries(button_momentary PRIVATE
@@ -44,7 +46,13 @@ target_link_libraries(button_momentary PRIVATE
     pico_binary_info
     hardware_gpio
     hardware_spi
-#    tinyusb_board
+)
+
+target_link_libraries(xyab PRIVATE
+    pico_stdlib 
+    pico_binary_info
+    hardware_gpio
+    hardware_spi
 )
 
 target_link_libraries(joystick PRIVATE
@@ -53,15 +61,16 @@ target_link_libraries(joystick PRIVATE
     hardware_gpio
     hardware_spi
     hardware_adc
-#    tinyusb_board
 )
 
 pico_enable_stdio_usb(button_maintained 1)
 pico_enable_stdio_usb(button_momentary 1)
+pico_enable_stdio_usb(xyab 1)
 pico_enable_stdio_usb(joystick 1)
 
 pico_add_extra_outputs(button_maintained)
 pico_add_extra_outputs(button_momentary)
+pico_add_extra_outputs(xyab)
 pico_add_extra_outputs(joystick)
 
 
