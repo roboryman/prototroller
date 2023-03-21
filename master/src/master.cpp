@@ -2,6 +2,7 @@
 #include "pico/stdio.h"
 //#include <stdio.h>
 #include <stdlib.h>
+#include "hardware/adc.h"
 #include "../libraries/SPIMaster.h"
 #include "usb_descriptors.h"
 #include "tusb.h"
@@ -212,6 +213,10 @@ void init_gpio()
     gpio_init(15);
     gpio_set_dir(15, false);
     gpio_set_pulls(15, false, false);
+
+    adc_init();
+    adc_gpio_init(26);
+    adc_select_input(0);
     #endif
 }
 
@@ -595,14 +600,16 @@ void modules_task(void)
                     break;
 
                 case SLIDER:
-                    {
-
-                    }
-                    break;
-                
                 case TWIST_SWITCH:
                     {
+                        // Potentiometer data is 12-bits
+                        uint16_t wiper = (in_buf[1] << 8) | in_buf[0];
 
+                        // Convert data into a signed holder between -2048 and 2047
+                        int16_t delta_wiper = (int16_t) (wiper - 2048);
+
+                        // Assign the potentiometer data to one analog axis, if space is available
+                        analog_count = assign_analog_data(column_report, analog_count, &delta_wiper, 1);
                     }
                     break;
 
@@ -645,28 +652,20 @@ void modules_task(void)
     }
 
     #if defined(DEBUG)
+    // Mock gamepad reports for each column
+
+    gamepad_report_col_0.analogs[0] = (int16_t) (adc_read() - 2048);
+    gamepad_report_col_1.analogs[0] = (int16_t) (adc_read() - 2048);
+    gamepad_report_col_2.analogs[0] = (int16_t) (adc_read() - 2048);
+    gamepad_report_col_3.analogs[0] = (int16_t) (adc_read() - 2048);
+    gamepad_report_col_4.analogs[0] = (int16_t) (adc_read() - 2048);
+
     if(!gpio_get(15))
     {
-        // Mock gamepad reports for each column
-
-        gamepad_report_col_0.analogs[0] = -1000;
-        gamepad_report_col_0.analogs[1] = 1000;
         gamepad_report_col_0.digitals |= 0x01;
-
-        gamepad_report_col_1.analogs[0] = -1000;
-        gamepad_report_col_1.analogs[1] = 1000;
         gamepad_report_col_1.digitals |= 0x01;
-
-        gamepad_report_col_2.analogs[0] = -1000;
-        gamepad_report_col_2.analogs[1] = 1000;
         gamepad_report_col_2.digitals |= 0x01;
-
-        gamepad_report_col_3.analogs[0] = -1000;
-        gamepad_report_col_3.analogs[1] = 1000;
         gamepad_report_col_3.digitals |= 0x01;
-
-        gamepad_report_col_4.analogs[0] = -1000;
-        gamepad_report_col_4.analogs[1] = 1000;
         gamepad_report_col_4.digitals |= 0x01;
     }
     #endif

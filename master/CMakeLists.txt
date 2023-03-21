@@ -22,6 +22,7 @@ target_link_libraries(master PUBLIC
     hardware_pio
     hardware_spi
     hardware_i2c
+    hardware_adc # Uncomment for testing
     tinyusb_device
     tinyusb_board
 )

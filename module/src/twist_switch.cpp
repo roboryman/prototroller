@@ -2,6 +2,7 @@
 #include <string.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
+#include "hardware/adc.h"
 #include "../libraries/SPISlave.h"
 #include "../../prototroller.h"
 
@@ -21,13 +22,13 @@ uint8_t out_buf[BUF_LEN] = {0};
 uint8_t in_buf[BUF_LEN] = {0};
 
 int main() {
-    // Initialize SPI as a slave
+
+    // Emable SPI and connect to GPIOs
     spi.SlaveInit();
 
-    // Initialize any needed GPIO
-    // gpio_init(MODULE_???_PIN);
-    // gpio_set_dir(MODULE_???_PIN1, GPIO_IN);
-    // gpio_set_pulls(MODULE_???_PIN1, false, false);
+    // Initialize the ADC/GPIO
+    adc_init();
+    adc_gpio_init(MODULE_TWIST_SWITCH_ADCPIN);
 
     // Wait for identification
     spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
@@ -35,13 +36,14 @@ int main() {
     // After identifier is sent, continually send the GPIO state
     while(true)
     {
-        // Get input
-        //bool button1_state = gpio_get(MODULE_???_PIN1);
+        // Read the voltage on the wiper by starting an ADC conversion
+        adc_select_input(0); // Select ADC0 (x)
+        uint16_t wiper = adc_read();
+        
+        // Load the wiper data into the buffer (LSB, MSB)
+        out_buf[0] = wiper;
+        out_buf[1] = (wiper >> 8);
 
-        // Load into the output buffer
-        //out_buf[0] = button1_state;
-
-        // Sync with the master
         spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
     }
 
