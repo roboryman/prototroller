@@ -53,7 +53,7 @@
     HID_LOGICAL_MIN    ( 0x81                                   ) ,\
     HID_LOGICAL_MAX    ( 0x7f                                   ) ,\
     HID_REPORT_COUNT   ( 8                                      ) ,\
-    HID_REPORT_SIZE    ( 8                                      ) ,\
+    HID_REPORT_SIZE    ( 16                                     ) ,\
     HID_INPUT          ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
   HID_COLLECTION_END \
 

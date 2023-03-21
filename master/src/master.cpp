@@ -56,7 +56,7 @@ typedef struct
 {
     //uint8_t     report_id;  // Report ID, TinyUSB already accounts for this
     uint16_t    buttons;   // Masks for currently pressed buttons
-    int8_t      analog[8];
+    int16_t     analog[8];
 } gamepad_report_t;
 
 gamepad_report_t gamepad_report_col_0;
@@ -303,9 +303,8 @@ void modules_task()
                         // Convert the joystick data
                         uint16_t x = (in_buf[1] << 8) | in_buf[0];
                         uint16_t y = (in_buf[3] << 8) | in_buf[2];
-                        uint16_t offset = 200;
-                        int8_t delta_x = ((x + offset) >> 9)-4;
-                        int8_t delta_y = ((y + offset) >> 9)-4;
+                        int16_t delta_x = (int16_t) (x - 2048);
+                        int16_t delta_y = (int16_t) (y - 2048);
 
                         // switch(joystickIndex)
                         // {
@@ -369,24 +368,24 @@ void modules_task()
     // Debug only past here.
     if(!gpio_get(15))
     {
-        gamepad_report_col_0.analog[0] += 25;
-        gamepad_report_col_0.analog[1] += 25;
+        gamepad_report_col_0.analog[0] = -1000;
+        gamepad_report_col_0.analog[1] = 1000;
         gamepad_report_col_0.buttons |= 0x01;
 
-        gamepad_report_col_1.analog[2] += 25;
-        gamepad_report_col_1.analog[3] += 25;
+        gamepad_report_col_1.analog[0] = -1000;
+        gamepad_report_col_1.analog[1] = 1000;
         gamepad_report_col_1.buttons |= 0x01;
 
-        gamepad_report_col_2.analog[4] += 25;
-        gamepad_report_col_2.analog[5] += 25;
+        gamepad_report_col_2.analog[0] = -1000;
+        gamepad_report_col_2.analog[1] = 1000;
         gamepad_report_col_2.buttons |= 0x01;
 
-        gamepad_report_col_3.analog[6] += 25;
-        gamepad_report_col_3.analog[7] += 25;
+        gamepad_report_col_3.analog[0] = -1000;
+        gamepad_report_col_3.analog[1] = 1000;
         gamepad_report_col_3.buttons |= 0x01;
 
-        gamepad_report_col_4.analog[0] += 25;
-        gamepad_report_col_4.analog[1] += 25;
+        gamepad_report_col_4.analog[0] = -1000;
+        gamepad_report_col_4.analog[1] = 1000;
         gamepad_report_col_4.buttons |= 0x01;
     }
 }
@@ -555,10 +554,11 @@ static void send_hid_report(uint8_t report_id)
 void hid_task(void)
 {
     // Poll every 10ms
+    // Must be longer than it takes to send all 5 reports
     const uint32_t interval_ms = 10;
     static uint32_t start_ms = 0;
 
-    if ( board_millis() - start_ms < interval_ms) return; // not enough time
+    if ( board_millis() - start_ms < interval_ms) return;
     start_ms += interval_ms;
 
     // Remote wakeup
@@ -570,12 +570,8 @@ void hid_task(void)
     }
     else
     {
-        send_hid_report(REPORT_ID_COLUMN_0); // Kick-off the report chain here
-        //tud_hid_n_report(0x00, REPORT_ID_COLUMN_0, &gamepad_report_col_0, sizeof(gamepad_report_col_0));
-        //tud_hid_n_report(0x00, REPORT_ID_COLUMN_1, &gamepad_report_col_1, sizeof(gamepad_report_col_1));
-        //tud_hid_n_report(0x00, REPORT_ID_COLUMN_2, &gamepad_report_col_2, sizeof(gamepad_report_col_2));
-        //tud_hid_n_report(0x00, REPORT_ID_COLUMN_3, &gamepad_report_col_3, sizeof(gamepad_report_col_3));
-        //tud_hid_n_report(0x00, REPORT_ID_COLUMN_4, &gamepad_report_col_4, sizeof(gamepad_report_col_4));
+        // Kick-off the report chain here
+        send_hid_report(REPORT_ID_COLUMN_0);
     }
 }
 
