@@ -84,6 +84,7 @@ void print_buf(uint8_t buf[], size_t len);
 void print_report(uint8_t report_id, gamepad_report_t *report);
 void rescan_modules();
 void init_gpio();
+uint8_t assign_analog_data(gamepad_report_t *column_report, uint8_t analog_count, int16_t *data, uint8_t len);
 void send_hid_report(uint8_t report_id);
 void tud_mount_cb(void);
 void tud_umount_cb(void);
@@ -212,6 +213,27 @@ void init_gpio()
     gpio_set_dir(15, false);
     gpio_set_pulls(15, false, false);
     #endif
+}
+
+uint8_t assign_analog_data(gamepad_report_t *column_report, uint8_t analog_count, int16_t *data, uint8_t len)
+{
+    // Calculate the maximum number of axes
+    uint8_t max = sizeof(column_report->analogs) / sizeof(column_report->analogs[0]);
+
+    // If the total number of axes will surpass the limit, then clamp it
+    if((analog_count + len) > max)
+    {
+        len = max - analog_count;
+    }
+
+    // Assign the data
+    for(uint8_t i = 0; i < len; i++)
+    {
+        column_report->analogs[analog_count+i] = data[i];
+    }
+    
+    // Return the new analog count
+    return analog_count + len;
 }
 
 // Send a gamepad report for the report id / column
@@ -456,8 +478,8 @@ void modules_task(void)
     bool connectedModules = false;
 
     // Track how many specific modules as we poll each slot
-    uint8_t digitalCount = 0;
-    uint8_t analogCount = 0;
+    uint8_t digital_count = 0;
+    uint8_t analog_count = 0;
 
     // The gamepad report for the current column
     gamepad_report_t *column_report = &gamepad_report_col_0;
@@ -467,8 +489,8 @@ void modules_task(void)
         // Reset digital and analog count for each column report
         if(module % 4 == 0)
         {
-            digitalCount = 0;
-            analogCount  = 0;
+            digital_count = 0;
+            analog_count  = 0;
         }
 
         // If this is the beginning of a new column report, set the struct accordingly
@@ -526,10 +548,10 @@ void modules_task(void)
                 case BUTTON_MOMENTARY:
                     {
                         // If the button (active-low) is pressed, mask a bit
-                        column_report->digitals |= ((in_buf[0]==0x00) << digitalCount); 
+                        column_report->digitals |= ((in_buf[0]==0x00) << digital_count); 
 
                         // Increment the number of digital inputs for this column
-                        digitalCount++;
+                        digital_count++;
                     }
 
                     break;
@@ -537,13 +559,13 @@ void modules_task(void)
                 case XYAB:
                     {
                         // Mask any bits
-                        column_report->digitals |= ((in_buf[0]==0x00) << digitalCount); 
-                        column_report->digitals |= ((in_buf[1]==0x00) << (digitalCount+1)); 
-                        column_report->digitals |= ((in_buf[2]==0x00) << (digitalCount+2)); 
-                        column_report->digitals |= ((in_buf[3]==0x00) << (digitalCount+3)); 
+                        column_report->digitals |= ((in_buf[0]==0x00) << digital_count); 
+                        column_report->digitals |= ((in_buf[1]==0x00) << (digital_count+1)); 
+                        column_report->digitals |= ((in_buf[2]==0x00) << (digital_count+2)); 
+                        column_report->digitals |= ((in_buf[3]==0x00) << (digital_count+3)); 
 
                         // Increment the number of digital inputs for this column
-                        digitalCount += 4;
+                        digital_count += 4;
                     }
                     break;
 
@@ -565,12 +587,9 @@ void modules_task(void)
                         int16_t delta_x = (int16_t) (x - 2048);
                         int16_t delta_y = (int16_t) (y - 2048);
 
-                        // Assign the joystick data to two analog axes
-                        column_report->analogs[analogCount]   = delta_x;
-                        column_report->analogs[analogCount+1] = delta_y;
-
-                        // Add 2 to the number of analog inputs for this column
-                        analogCount += 2;
+                        // Assign the joystick data to two analog axes, if space is available
+                        int16_t joystick_data[2] = { delta_x, delta_y };
+                        analog_count = assign_analog_data(column_report, analog_count, joystick_data, 2);
                     }
 
                     break;
