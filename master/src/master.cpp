@@ -9,6 +9,7 @@
 #include "tusb.h"
 #include "bsp/board.h"
 #include "../../prototroller.h"
+#include "../../commons.h"
 
 // Uncomment to run in debug mode
 #define DEBUG 0

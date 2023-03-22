@@ -5,6 +5,7 @@
 #include "hardware/adc.h"
 #include "../libraries/SPISlave.h"
 #include "../../prototroller.h"
+#include "../../commons.h"
 
 #define moduleID TWIST_SWITCH
 

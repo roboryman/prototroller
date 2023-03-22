@@ -4,6 +4,7 @@
 #include "pico/binary_info.h"
 #include "../libraries/SPISlave.h"
 #include "../../prototroller.h"
+#include "../../commons.h"
 
 #define moduleID DPAD
 
