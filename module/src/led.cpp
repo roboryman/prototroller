@@ -24,25 +24,22 @@ int main() {
     // Initialize SPI as a slave
     spi.SlaveInit();
 
-    // Initialize any needed GPIO
-    // gpio_init(MODULE_???_PIN);
-    // gpio_set_dir(MODULE_???_PIN1, GPIO_IN);
-    // gpio_set_pulls(MODULE_???_PIN1, false, false);
+    // Initialize the active-high LED GPIO
+    gpio_init(MODULE_LED_PIN);
+    gpio_set_dir(MODULE_LED_PIN, GPIO_OUT);
+    gpio_set_pulls(MODULE_LED_PIN, false, false);
+    gpio_put(MODULE_LED_PIN, 0);
 
     // Wait for identification
     spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
 
-    // After identifier is sent, continually send the GPIO state
     while(true)
     {
-        // Get input
-        //bool button1_state = gpio_get(MODULE_???_PIN1);
-
-        // Load into the output buffer
-        //out_buf[0] = button1_state;
-
-        // Sync with the master
+        // Read data in from the master
         spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+
+        // Place the LED output on the appropraite pin
+        gpio_put(MODULE_LED_PIN, in_buf[0]);
     }
 
 }

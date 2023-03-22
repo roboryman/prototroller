@@ -2,6 +2,7 @@
 #include "pico/stdio.h"
 //#include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
 #include "hardware/adc.h"
 #include "../libraries/SPIMaster.h"
 #include "usb_descriptors.h"
@@ -33,6 +34,15 @@ typedef struct
     int16_t     analogs[8]; // Analog inputs (joystick, slider, twist switch, etc.)
 } gamepad_report_t;
 
+// Prototroller CDC Commands
+// Commands sent over CDC (Serial) from the host
+// Must support the maximum number of output modules overall
+typedef struct
+{
+    uint32_t    digitals;
+    int16_t     analogs[20];
+} cdc_commands_t;
+
 
 //--------------------------------------------------------------------+
 // Globals
@@ -44,6 +54,9 @@ gamepad_report_t gamepad_report_col_1;
 gamepad_report_t gamepad_report_col_2;
 gamepad_report_t gamepad_report_col_3;
 gamepad_report_t gamepad_report_col_4;
+
+// CDC Command Data Store
+cdc_commands_t commands;
 
 // SPI Master
 SPIMaster master(
@@ -94,8 +107,11 @@ void tud_resume_cb(void);
 void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_t len);
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize);
+void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts);
+void tud_cdc_rx_cb(uint8_t itf);
 void rescan_cb(uint gpio, uint32_t events);
 void hid_task(void);
+void cdc_task(void);
 void led_blinking_task(void);
 void print_report_task(void);
 void modules_task(void);
@@ -217,6 +233,21 @@ void init_gpio()
     adc_init();
     adc_gpio_init(26);
     adc_select_input(0);
+
+    gpio_init(20);
+    gpio_set_dir(20, true);
+    gpio_set_pulls(20, false, false);
+    gpio_put(20, true);
+
+    gpio_init(21);
+    gpio_set_dir(21, true);
+    gpio_set_pulls(21, false, false);
+    gpio_put(21, true);
+
+    gpio_init(22);
+    gpio_set_dir(22, true);
+    gpio_set_pulls(22, false, false);
+    gpio_put(22, true);
     #endif
 }
 
@@ -380,6 +411,32 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
     }
     */
 
+    // echo back anything we received from host
+    tud_hid_report(0, buffer, bufsize);
+
+}
+
+// Invoked when cdc when line state changed e.g connected/disconnected
+void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
+{
+    (void) itf;
+    (void) rts;
+
+    // TODO set some indicator
+    if ( dtr )
+    {
+        // Terminal connected
+    }
+    else
+    {
+        // Terminal disconnected
+    }
+}
+
+// Invoked when CDC interface received data from host
+void tud_cdc_rx_cb(uint8_t itf)
+{
+    (void) itf;
 }
 
 // Invoked when the user presses rescan button. Debounced to the value of delay.
@@ -422,6 +479,89 @@ void hid_task(void)
     {
         // Kick-off the report chain here, starting with the first column
         send_hid_report(REPORT_ID_COLUMN_0);
+    }
+}
+
+void cdc_task(void)
+{
+    // The serial interface receiving commands from host
+    uint8_t itf_rx = 1;
+
+    // The serial interface transmitting output to host
+    uint8_t itf_tx = 0;
+
+    if( tud_cdc_n_connected(itf_rx) )
+    {
+        // Connected
+        if( tud_cdc_n_available(itf_rx) )
+        {
+            // Data available
+            char buf[64];
+
+            // Tokenized data
+            char tokens[3][64];
+
+            // Read
+            uint32_t count = tud_cdc_n_read(itf_rx, buf, sizeof(buf));
+
+            // Tokenize
+            char *token;
+            token = strtok(buf, " ");
+            uint8_t index = 0;
+            
+            // Extract 3 tokens at most from the buffer
+            while(token != NULL && index < 3)
+            {
+                strcpy(tokens[index++], token);
+                token = strtok(NULL, " ");
+            }
+
+            if(strcmp(tokens[0], "digital") == 0)
+            {
+                int module = atoi(tokens[1]);
+                int value = atoi(tokens[2]);
+                if(module >= 0 && module <= 19)
+                {
+                    if(value == 0)
+                    {
+                        commands.digitals &= ~(1 << module);
+                    }
+                    else if(value == 1)
+                    {
+                        commands.digitals |= (1 << module);
+                    }
+                }
+            }
+            else if(strcmp(tokens[0], "analog") == 0)
+            {
+                int module = atoi(tokens[1]);
+                int value = atoi(tokens[2]);
+
+                if(module >= 0 && module <= 19)
+                {
+                    commands.analogs[module] = value;
+                }
+            }
+            else if(strcmp(tokens[0], "resetd") == 0)
+            {
+                commands.digitals = 0;
+            }
+            else if(strcmp(tokens[0], "reseta") == 0)
+            {
+                memset(commands.analogs, 0, sizeof(commands.analogs));
+            }
+            else if(strcmp(tokens[0], "reset") == 0)
+            {
+                memset(&commands, 0, sizeof(cdc_commands_t));
+            }
+
+            // Echo back
+            //tud_cdc_n_write(itf_tx, buf, count);
+ 
+            // Flush
+            //tud_cdc_n_write_flush(itf_tx);
+
+        }
     }
 }
 
@@ -504,7 +644,6 @@ void modules_task(void)
         else if(module == 12) column_report = &gamepad_report_col_3;
         else if(module == 16) column_report = &gamepad_report_col_4;
         
-
         // If this module is connected, exchange data over SPI and process into column report
         if(module_IDs[module])
         {
@@ -514,8 +653,8 @@ void modules_task(void)
                 // --- DIGITAL OUTPUTS
                 case LED:
                     {
-                    // TODO: Forward data from HID to LED module
-                    // out_buf = ...
+                        // Forward data from digital commands to the LED module
+                        out_buf[0] = 0x01 & (uint8_t) (commands.digitals >> module);
                     }
                     break;
 
@@ -668,6 +807,11 @@ void modules_task(void)
         gamepad_report_col_3.digitals |= 0x01;
         gamepad_report_col_4.digitals |= 0x01;
     }
+
+    // Mock LED outputs
+    gpio_put(20, (0x00000001 & commands.digitals));
+    gpio_put(21, (0x00000002 & commands.digitals));
+    gpio_put(22, (0x00000004 & commands.digitals));
     #endif
 }
 
@@ -721,5 +865,7 @@ int main() {
         print_report_task();
 
         hid_task();
+        
+        cdc_task();
     }
 }

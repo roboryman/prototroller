@@ -47,6 +47,7 @@ tusb_desc_device_t const desc_device =
     .bLength            = sizeof(tusb_desc_device_t),
     .bDescriptorType    = TUSB_DESC_DEVICE,
     .bcdUSB             = USB_BCD,
+
     .bDeviceClass       = 0x00,
     .bDeviceSubClass    = 0x00,
     .bDeviceProtocol    = 0x00,
@@ -97,6 +98,8 @@ enum
   // HID + CDC
   ITF_NUM_CDC_0 = 0,
   ITF_NUM_CDC_0_DATA,
+  ITF_NUM_CDC_1,
+  ITF_NUM_CDC_1_DATA,
   ITF_NUM_HID,
   ITF_NUM_TOTAL
 
@@ -109,8 +112,13 @@ enum
 #define EPNUM_CDC_0_NOTIF   0x81
 #define EPNUM_CDC_0_OUT     0x02
 #define EPNUM_CDC_0_IN      0x82
-#define EPNUM_HID           0x83
-#define  CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN)
+
+#define EPNUM_CDC_1_NOTIF   0x83
+#define EPNUM_CDC_1_OUT     0x04
+#define EPNUM_CDC_1_IN      0x84
+
+#define EPNUM_HID           0x85
+#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN)
 
 // HID Only
 //#define EPNUM_HID           0x81
@@ -124,8 +132,11 @@ uint8_t const desc_configuration[] =
   // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
   TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 5),
 
-  // CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+  // 1st CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_0, 4, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
+
+  // 2nd CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+  TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_1, 4, EPNUM_CDC_1_NOTIF, 8, EPNUM_CDC_1_OUT, EPNUM_CDC_1_IN, 64),
 };
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
@@ -148,7 +159,7 @@ char const* string_desc_arr [] =
   "Prototroller",                // 1: Manufacturer
   "Prototroller",                // 2: Product
   "200000"                       // 3: Serials, should use chip ID
-  //"Prototroller CDC",            // 4: CDC Interface
+  "Prototroller CDC",            // 4: CDC Interface
 };
 
 static uint16_t _desc_str[32];

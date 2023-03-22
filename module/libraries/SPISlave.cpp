@@ -61,7 +61,7 @@ bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
         //Read/Write data
         spi_write_read_blocking(spi, out_buf, in_buf, BUF_LEN);
 
-        // Overide the output enable to disable, in case the Pico is not selected but driving the TX pin
+        // Overide the output enable to disable, in case the RP2040 is not selected but driving the TX pin
         gpio_set_oeover(TXPin, GPIO_OVERRIDE_LOW);
 
         return true;
@@ -77,7 +77,7 @@ bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
         //Write Identifier 
         spi_write_blocking(spi, buf, 1);
 
-        // Overide the output enable to disable, in case the Pico is not selected but driving the TX pin
+        // Overide the output enable to disable, in case the RP2040 is not selected but driving the TX pin
         gpio_set_oeover(TXPin, GPIO_OVERRIDE_LOW);
 
         return true;

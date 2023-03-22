@@ -41,12 +41,6 @@ int main() {
         // Set the first byte to the button state
         out_buf[0] = button_state;
 
-        // DEBUG - Set ALL buffer data to the button state
-        // for(uint16_t i = 0; i < BUF_LEN; i++)
-        // {
-        //     out_buf[i] = button_state;
-        // }
-
         spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
     }
 
