@@ -24,10 +24,19 @@ int main() {
     // Initialize SPI as a slave
     spi.SlaveInit();
 
-    // Initialize any needed GPIO
-    // gpio_init(MODULE_???_PIN);
-    // gpio_set_dir(MODULE_???_PIN1, GPIO_IN);
-    // gpio_set_pulls(MODULE_???_PIN1, false, false);
+    // Initialize the active-low GPIOs
+    gpio_init(MODULE_DPAD_PIN1);
+    gpio_init(MODULE_DPAD_PIN2);
+    gpio_init(MODULE_DPAD_PIN3);
+    gpio_init(MODULE_DPAD_PIN4);
+    gpio_set_dir(MODULE_DPAD_PIN1, GPIO_IN);
+    gpio_set_dir(MODULE_DPAD_PIN2, GPIO_IN);
+    gpio_set_dir(MODULE_DPAD_PIN3, GPIO_IN);
+    gpio_set_dir(MODULE_DPAD_PIN4, GPIO_IN);
+    gpio_set_pulls(MODULE_DPAD_PIN1, false, false);
+    gpio_set_pulls(MODULE_DPAD_PIN2, false, false);
+    gpio_set_pulls(MODULE_DPAD_PIN3, false, false);
+    gpio_set_pulls(MODULE_DPAD_PIN4, false, false);
 
     // Wait for identification
     spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN);
@@ -35,13 +44,18 @@ int main() {
     // After identifier is sent, continually send the GPIO state
     while(true)
     {
-        // Get input
-        //bool button1_state = gpio_get(MODULE_???_PIN1);
+        // Get the active-low button state
+        bool button1_state = gpio_get(MODULE_XYAB_PIN1);
+        bool button2_state = gpio_get(MODULE_XYAB_PIN2);
+        bool button3_state = gpio_get(MODULE_XYAB_PIN3);
+        bool button4_state = gpio_get(MODULE_XYAB_PIN4);
 
-        // Load into the output buffer
-        //out_buf[0] = button1_state;
+        // Load the button states into the output buffer
+        out_buf[0] = button1_state;
+        out_buf[1] = button2_state;
+        out_buf[2] = button3_state;
+        out_buf[3] = button4_state;
 
-        // Sync with the master
         spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN);
     }
 

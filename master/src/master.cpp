@@ -669,6 +669,7 @@ void modules_task(void)
                     break;
 
                 case XYAB:
+                case DPAD:
                     {
                         // Mask any bits
                         column_report->digitals |= ((in_buf[0]==0x00) << digital_count); 
@@ -680,13 +681,7 @@ void modules_task(void)
                         digital_count += 4;
                     }
                     break;
-
-                case DPAD:
-                    {
-
-                    }
-                    break;
-                
+    
 
                 // --- ANALOG INPUTS ---
                 case JOYSTICK:
