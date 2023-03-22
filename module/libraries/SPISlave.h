@@ -14,9 +14,6 @@
 
 class SPISlave
 {
-    // uint8_t inBuf[BUF_LEN];
-    // uint8_t outBuf[BUF_LEN];
-    // size_t buffSize;
     spi_inst_t *spi;
     uint TXPin;
     uint RXPin;
@@ -27,6 +24,6 @@ class SPISlave
     public:
         SPISlave(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CSNPin,uint8_t ID);
         void SlaveInit();
-        bool SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len);
+        bool SlaveReadWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len);
         //void SlaveWriteIdentifier(uint8_t identifier);
 };

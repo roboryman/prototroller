@@ -6,6 +6,22 @@
 
 
 
+/* CDC COMMANDS FROM HOST
+ * digital [0/1/.../19] [0/1]
+ *   for example: digital 12 1 will output digital 1 to module 12, if connected
+ * analog [0/1/.../19] [-2048/-2047/.../2047]
+ *   for example: analog 3 256 will output ~0.206V to module 3, if connected
+ *   (component must have internal DAC or use DAC on interface board)
+ * resetd
+ *   reset only the digital outputs
+ * reseta
+ *   reset only the analog outputs
+ * reset
+ *   reset everything
+ */  
+
+
+
 // --- MASTER BOARD BEGIN ---
 // LED
 #define MASTER_LED_R_PIN 2

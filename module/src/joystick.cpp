@@ -84,7 +84,7 @@ int main() {
     printf("ADC initialized.\n");
 
     printf("Wait for ID.\n");
-    spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+    spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN);
 
     // After identifier is sent, continually send the GPIO state
     while(true)
@@ -119,9 +119,9 @@ int main() {
         //printf("X : %i\n", x);
         //printf("Y : %i\n", y);
 
-        spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+        spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN);
 
-        // if(spi.SlaveWrite(out_buf, in_buf, BUF_LEN)) {
+        // if(spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN)) {
         //     printf("Slave Write Executed\n");
         // }
         // else {

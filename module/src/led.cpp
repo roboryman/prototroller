@@ -31,12 +31,12 @@ int main() {
     gpio_put(MODULE_LED_PIN, 0);
 
     // Wait for identification
-    spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+    spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN);
 
     while(true)
     {
         // Read data in from the master
-        spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+        spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN);
 
         // Place the LED output on the appropraite pin
         gpio_put(MODULE_LED_PIN, in_buf[0]);

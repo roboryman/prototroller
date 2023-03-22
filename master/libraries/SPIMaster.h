@@ -17,11 +17,6 @@
 
 class SPIMaster
 {
-    // size_t buffSize;
-    // uint SPIInst = 0;
-    // uint8_t inBuf[BUF_LEN];
-    // uint8_t outBuf[BUF_LEN];
-
     spi_inst_t *spi;
     uint TXPin;
     uint RXPin;
@@ -32,7 +27,7 @@ class SPIMaster
     public:
         SPIMaster(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CSNPin, bool externalDecoder);
         void MasterInit();
-        bool MasterRead(uint8_t *out_buf, uint8_t *in_buf, size_t len);
+        bool MasterReadWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len);
         uint8_t MasterIdentify();
         void SlaveSelect(uint8_t CSN);
 };

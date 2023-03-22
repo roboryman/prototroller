@@ -12,8 +12,7 @@ SPISlave::SPISlave(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CS
 }
 
 /* InitComponent
- * Args: SPI Instance (uint), TX Pin (uint), RX Pin (uint), SCK Pin (uint), CSN Pin (uint), Baud Rate (uint)
- * Description: Initialize the SPI, set as slave, and set up GPIO.
+ * Initialize SPI, set as slave, and set up GPIO.
  */
 void SPISlave::SlaveInit()
 {
@@ -37,12 +36,11 @@ void SPISlave::SlaveInit()
 }
 
 /* SlaveWrite
- * Args: data buffer (uint8_t *), data buffer size (size_t)
- * Description: Write buffer data over the appropriate SPI module.
- *              If the master requested data or identification, return true.
- *              Otherwise, return false.
+ * Write buffer data over the appropriate SPI module.
+ * If the master requested data or identification, return true.
+ * Otherwise, return false.
  */
-bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
+bool SPISlave::SlaveReadWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 {
     // Set the last output buffer byte to the verify byte
     out_buf[len-1] = (uint8_t) VERIFY_BYTE;

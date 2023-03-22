@@ -30,7 +30,7 @@ int main() {
     gpio_set_pulls(MODULE_BUTTON_PIN, false, false);
 
     // Wait for identification
-    spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+    spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN);
 
     // After identifier is sent, continually send the GPIO state
     while(true)
@@ -47,7 +47,7 @@ int main() {
         //     out_buf[i] = button_state;
         // }
 
-        spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+        spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN);
     }
 
 }

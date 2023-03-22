@@ -31,7 +31,7 @@ int main() {
     adc_gpio_init(MODULE_SLIDER_ADCPIN);
 
     // Wait for identification
-    spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+    spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN);
 
     // After identifier is sent, continually send the GPIO state
     while(true)
@@ -44,7 +44,7 @@ int main() {
         out_buf[0] = wiper;
         out_buf[1] = (wiper >> 8);
 
-        spi.SlaveWrite(out_buf, in_buf, BUF_LEN);
+        spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN);
     }
 
 }

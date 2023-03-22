@@ -12,8 +12,7 @@ SPIMaster::SPIMaster(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint 
 }
 
 /* MasterInit
- * Args: None
- * Description: Initialize the SPI instance using provided values
+ * Initialize the SPI instance using provided values
  */
 void SPIMaster::MasterInit()
 {
@@ -28,11 +27,10 @@ void SPIMaster::MasterInit()
     gpio_set_function(CSNPin, GPIO_FUNC_SPI); // Comment? May not need decoder w/ with CHPA=1 (for prototype)
 }
 
-/* MasterRead
- * Args: output buffer, input buffer, length of buffers
- * Description: Send Data Request Handshake, Read Entire Data Buffer after brief delay
+/* MasterReadWrite
+ * Send Data Request Handshake, Read Entire Data Buffer after brief delay
  */
-bool SPIMaster::MasterRead(uint8_t *out_buf, uint8_t *in_buf, size_t len)
+bool SPIMaster::MasterReadWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 {
     uint8_t buf[1] = {DATA_REQUEST};
 
@@ -52,8 +50,7 @@ bool SPIMaster::MasterRead(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 }
 
 /* MasterIdentify
- * Args: None
- * Description: Send Identification Handshake, Return Response Byte
+ * Send Identification Handshake, Return Response Byte
  */
 uint8_t SPIMaster::MasterIdentify()
 {
@@ -73,8 +70,7 @@ uint8_t SPIMaster::MasterIdentify()
 }
 
 /* MasterRead
- * Args: CSN (uint8_t)
- * Description: Take CSN and place onto proper GPIO pins
+ * Take CSN and place onto proper GPIO pins
  */
 void SPIMaster::SlaveSelect(uint8_t CSN)
 {

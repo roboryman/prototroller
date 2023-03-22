@@ -121,7 +121,6 @@ void modules_task(void);
 //--------------------------------------------------------------------+
 
 // Outputs contents of a buffer to standard output.
-// WARNING: THIS MAY IMPACT SPI OPERATION.
 void print_buf(uint8_t buf[], size_t len)
 {
     int i;
@@ -139,7 +138,6 @@ void print_buf(uint8_t buf[], size_t len)
 }
 
 // Outputs contents of a gamepad report to standard output.
-// WARNING: THIS MAY IMPACT SPI OPERATION.
 void print_report(uint8_t report_id, gamepad_report_t *report)
 {
     printf("===========================\n");
@@ -251,6 +249,7 @@ void init_gpio()
     #endif
 }
 
+// Assign analog data to the specified report, clamping at the maximum allowed axes
 uint8_t assign_analog_data(gamepad_report_t *column_report, uint8_t analog_count, int16_t *data, uint8_t len)
 {
     // Calculate the maximum number of axes
@@ -383,37 +382,6 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 {
     // TODO not implemented
     (void) instance;
-
-    /*
-    if (report_type == HID_REPORT_TYPE_OUTPUT)
-    {
-        // Set keyboard LED e.g Capslock, Numlock etc...
-        if (report_id == REPORT_ID_KEYBOARD)
-        {
-            // bufsize should be (at least) 1
-            if ( bufsize < 1 ) return;
-
-            uint8_t const kbd_leds = buffer[0];
-
-            if (kbd_leds & KEYBOARD_LED_CAPSLOCK)
-            {
-                // Capslock On: disable blink, turn led on
-                blink_interval_ms = 0;
-                board_led_write(true);
-            }
-            else
-            {
-                // Caplocks Off: back to normal blink
-                board_led_write(false);
-                blink_interval_ms = BLINK_MOUNTED;
-            }
-        }
-    }
-    */
-
-    // echo back anything we received from host
-    tud_hid_report(0, buffer, bufsize);
-
 }
 
 // Invoked when cdc when line state changed e.g connected/disconnected
@@ -422,7 +390,6 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
     (void) itf;
     (void) rts;
 
-    // TODO set some indicator
     if ( dtr )
     {
         // Terminal connected
@@ -482,6 +449,7 @@ void hid_task(void)
     }
 }
 
+// Task to process CDC data
 void cdc_task(void)
 {
     // The serial interface receiving commands from host
@@ -666,7 +634,7 @@ void modules_task(void)
             master.SlaveSelect(module);
 
             // Read module data over SPI
-            bool valid = master.MasterRead(out_buf, in_buf, BUF_LEN);
+            bool valid = master.MasterReadWrite(out_buf, in_buf, BUF_LEN);
 
             // If read is invalid, set the module as disconnected
             if(!valid)
