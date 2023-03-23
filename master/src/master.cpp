@@ -50,11 +50,11 @@ typedef struct
 //--------------------------------------------------------------------+
 
 // Gamepad reports for each column
-gamepad_report_t gamepad_report_col_0;
-gamepad_report_t gamepad_report_col_1;
-gamepad_report_t gamepad_report_col_2;
-gamepad_report_t gamepad_report_col_3;
-gamepad_report_t gamepad_report_col_4;
+gamepad_report_t gamepad_report_col_0,
+gamepad_report_col_1, 
+gamepad_report_col_2,
+gamepad_report_col_3,
+gamepad_report_col_4;
 
 // CDC Command Data Store
 cdc_commands_t commands;
@@ -70,8 +70,7 @@ SPIMaster master(
 );
 
 // SPI Transaction Buffers
-uint8_t out_buf[BUF_LEN];
-uint8_t in_buf[BUF_LEN];
+uint8_t out_buf[BUF_LEN],in_buf[BUF_LEN];
 
 // Keep track of error counts
 uint8_t error_counts[MAX_MODULES] = {0};
@@ -191,7 +190,7 @@ void rescan_modules()
 // Initializes GPIO and setup interrupts
 void init_gpio()
 {
-    // Initialize GPIO for SPI CSNs
+    // Initialize GPIO for SPI CSNs (Decoder Addresses + Decoder Enables)
     for(uint8_t pin = MASTER_EONA_PIN; pin <= MASTER_A0_PIN; pin++)
     {
         gpio_init(pin);
@@ -217,10 +216,12 @@ void init_gpio()
     gpio_set_dir(MASTER_LED_R_PIN, GPIO_OUT);
     gpio_set_pulls(MASTER_LED_R_PIN, false, false);
     gpio_put(MASTER_LED_R_PIN, 1);
+
     gpio_init(MASTER_LED_G_PIN);
     gpio_set_dir(MASTER_LED_G_PIN, GPIO_OUT);
     gpio_set_pulls(MASTER_LED_G_PIN, false, false);
     gpio_put(MASTER_LED_G_PIN, 1);
+
     gpio_init(MASTER_LED_B_PIN);
     gpio_set_dir(MASTER_LED_B_PIN, GPIO_OUT);
     gpio_set_pulls(MASTER_LED_B_PIN, false, false);
@@ -650,10 +651,20 @@ void modules_task(void)
             // If read is invalid, set the module as disconnected
             if(!valid)
             {
-                module_IDs[module] = DISCONNECTED;
-                printf("Module %u appears to have disconnected or is invalid: ", module);
-                printf(module_names[module_IDs[module]]);
-                printf("\n");
+                if(error_counts[module] >= MASTER_RETRY_ON_ERROR_COUNT){
+                    //Module has failed to reconnect
+                    error_counts[module] = 0;
+                    module_IDs[module] = DISCONNECTED;
+                    printf("Module %u Has disconnected or malfunctioned", module);
+                    printf("\n");
+                } else 
+                {
+                    module_IDs[module] = ERROR_STATE;
+                    printf("Module %u appears to have sent invalid or absent data: ", module);
+                    printf(module_names[module_IDs[module]]);
+                    printf("\n");
+                }
+
             }
             else
             {
@@ -744,6 +755,30 @@ void modules_task(void)
                     }
                     break;
 
+                case ERROR_STATE:
+                    {
+                        //Attempt a Reconnection
+                        // Select the current (potentially connected) module
+                        master.SlaveSelect(module);
+
+                        // Attempt to identify module currently selected
+                        moduleID_t identification = (moduleID_t) master.MasterIdentify();
+
+                        // Deselect the module
+                        master.SlaveSelect(NO_SLAVE_SELECTED_CSN);
+
+                        // Update the module identification in the internal data store
+                        if(identification != DISCONNECTED){
+                            error_counts[module] = 0;
+                            module_IDs[module] = identification;
+                            printf("Module %u Reconnected! \n", module);
+                        } else {
+                            error_counts[module] += 1;
+                            printf("Module %u Reconnection attempt failed \n", module);
+
+                        }
+                    }
+                    break;
                 default:
                     break;
             }
