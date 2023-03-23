@@ -32,6 +32,8 @@ void SPISlave::SlaveInit()
     gpio_set_function(SCKPin, GPIO_FUNC_SPI);
     gpio_set_function(CSNPin, GPIO_FUNC_SPI);
 
+    //gpio_disable_pulls(CSNPin);
+
     gpio_set_oeover(TXPin, GPIO_OVERRIDE_LOW);
 }
 

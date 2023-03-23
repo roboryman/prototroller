@@ -26,9 +26,9 @@ int main() {
     spi.SlaveInit();
 
     // Initialize the active-low button GPIO
-    gpio_init(MODULE_BUTTON_PIN);
-    gpio_set_dir(MODULE_BUTTON_PIN, GPIO_IN);
-    gpio_set_pulls(MODULE_BUTTON_PIN, false, false);
+    gpio_init(MODULE_MAINTAINED_BUTTON_PIN);
+    gpio_set_dir(MODULE_MAINTAINED_BUTTON_PIN, GPIO_IN);
+    gpio_set_pulls(MODULE_MAINTAINED_BUTTON_PIN, false, false);
 
     // Wait for identification
     spi.SlaveReadWrite(out_buf, in_buf, BUF_LEN);
@@ -37,7 +37,7 @@ int main() {
     while(true)
     {
         // Get the active-low button state
-        bool button_state = gpio_get(MODULE_BUTTON_PIN);
+        bool button_state = gpio_get(MODULE_MAINTAINED_BUTTON_PIN);
 
         // Set the first byte to the button state
         out_buf[0] = button_state;

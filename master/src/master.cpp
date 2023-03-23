@@ -12,7 +12,7 @@
 #include "../../commons.h"
 
 // Uncomment to run in debug mode
-#define DEBUG 0
+//#define DEBUG 0
 
 //--------------------------------------------------------------------+
 // Types and Enums
@@ -66,12 +66,15 @@ SPIMaster master(
     MASTER_SPI_RX_PIN,
     MASTER_SPI_SCK_PIN,
     MASTER_SPI_CSN_PIN,
-    false
+    true
 );
 
 // SPI Transaction Buffers
 uint8_t out_buf[BUF_LEN];
 uint8_t in_buf[BUF_LEN];
+
+// Keep track of error counts
+uint8_t error_counts[MAX_MODULES] = {0};
 
 // Module Identification Data Store
 moduleID_t module_IDs[MAX_MODULES] = {DISCONNECTED};
@@ -189,6 +192,13 @@ void rescan_modules()
 void init_gpio()
 {
     // Initialize GPIO for SPI CSNs
+    for(uint8_t pin = MASTER_EONA_PIN; pin <= MASTER_A0_PIN; pin++)
+    {
+        gpio_init(pin);
+        gpio_set_dir(pin, true);
+        gpio_set_pulls(pin, false, false);
+        gpio_put(pin, 1);
+    }
     for(uint8_t pin = MASTER_CSN_START_PIN; pin <= MASTER_CSN_END_PIN; pin++)
     {
         gpio_init(pin);
@@ -814,7 +824,7 @@ int main() {
     printf("[!] Master GPIO Initialized\n");
 
     // Initial scan for modules
-    rescan_modules();
+    //rescan_modules();
     
     // Infinite task loop
     while(true) {

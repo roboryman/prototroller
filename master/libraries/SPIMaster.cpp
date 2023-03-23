@@ -102,9 +102,25 @@ void SPIMaster::SlaveSelect(uint8_t CSN)
         // Pin 2: 0
         // Pin ...: 0
 
-        for(uint8_t pin = MASTER_CSN_START_PIN; pin <= MASTER_CSN_END_PIN; pin++)
+        if(CSN >= 16)
         {
-            gpio_put(pin, 0xFE & (CSN >> (pin - MASTER_CSN_START_PIN)));
+            gpio_put(MASTER_EONA_PIN, 1);
+            gpio_put(MASTER_EONB_PIN, 0);
+        }
+        else if(CSN <= 15)
+        {
+            gpio_put(MASTER_EONA_PIN, 0);
+            gpio_put(MASTER_EONB_PIN, 1);
+        }
+        else
+        {
+            gpio_put(MASTER_EONA_PIN, 1);
+            gpio_put(MASTER_EONB_PIN, 1);
+        }
+
+        for(uint8_t pin = MASTER_A0_PIN; pin >= MASTER_A3_PIN; pin--)
+        {
+            gpio_put(pin, 0x01 & (CSN >> (MASTER_A0_PIN - pin)));
         }
     }
 
