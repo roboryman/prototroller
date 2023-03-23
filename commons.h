@@ -3,6 +3,7 @@
 // --- Module ID Type ---
 typedef enum {
     DISCONNECTED = 0,
+    ERROR_STATE,
     BUTTON_MAINTAINED,
     BUTTON_MOMENTARY,
     XYAB,
