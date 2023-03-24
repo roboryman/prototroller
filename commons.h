@@ -20,6 +20,7 @@ typedef enum {
 const char module_names[][25] =
 {
     "DISCONNECTED",
+    "ERROR STATE",
     "BUTTON MAINTAINED MODULE",
     "BUTTON MOMENTARY MODULE",
     "XYAB MODULE",
