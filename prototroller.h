@@ -6,6 +6,22 @@
 
 
 
+/* CDC COMMANDS FROM HOST
+ * digital [0/1/.../19] [0/1]
+ *   for example: digital 12 1 will output digital 1 to module 12, if connected
+ * analog [0/1/.../19] [-2048/-2047/.../2047]
+ *   for example: analog 3 256 will output ~0.206V to module 3, if connected
+ *   (component must have internal DAC or use DAC on interface board)
+ * resetd
+ *   reset only the digital outputs
+ * reseta
+ *   reset only the analog outputs
+ * reset
+ *   reset everything
+ */  
+
+
+
 // --- MASTER BOARD BEGIN ---
 // LED
 #define MASTER_LED_R_PIN 2
@@ -19,6 +35,8 @@
 #define MASTER_A1_PIN 11
 #define MASTER_A2_PIN 10
 #define MASTER_A3_PIN 9
+#define MASTER_EONB_PIN 8
+#define MASTER_EONA_PIN 7
 
 // SPI
 #define MASTER_SPI_TX_PIN      19
@@ -28,6 +46,7 @@
 
 // MISC
 #define MASTER_RESCAN_PIN 17
+#define MASTER_RETRY_ON_ERROR_COUNT 20
 // --- MASTER BOARD END ---
 
 
@@ -38,16 +57,41 @@
 #define MODULE_SPI_SCK_PIN     18
 #define MODULE_SPI_CSN_PIN     17
 #define MODULE_SPI_RX_PIN      16
+
 // BUTTON MODULE
 #define MODULE_BUTTON_PIN 27
+
+// MAINTAINED BUTTON MODULE
+#define MODULE_MAINTAINED_BUTTON_PIN 26
+
+// XYAB MODULE
+#define MODULE_XYAB_PIN1 25
+#define MODULE_XYAB_PIN2 26
+#define MODULE_XYAB_PIN3 27
+#define MODULE_XYAB_PIN4 28
+
+// DPAD MODULE
+#define MODULE_DPAD_PIN1 25
+#define MODULE_DPAD_PIN2 26
+#define MODULE_DPAD_PIN3 27
+#define MODULE_DPAD_PIN4 28
+
 // JOYSTICK MODULE
 #define MODULE_JOYSTICK_VRX_PIN 27
 #define MODULE_JOYSTICK_VRY_PIN 26
+
+// SLIDER MODULE
+#define MODULE_SLIDER_ADCPIN 26
+
+// TWIST SWITCH MODULE
+#define MODULE_TWIST_SWITCH_ADCPIN 27
+
+// LED MODULE
+#define MODULE_LED_PIN 25
+
 // --- MODULE BOARD END ---
 
 
-
-// --- COMMONS BEGIN ---
 // --- UART ---
 #ifndef PICO_DEFAULT_UART
 #define PICO_DEFAULT_UART 0

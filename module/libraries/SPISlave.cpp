@@ -12,8 +12,7 @@ SPISlave::SPISlave(spi_inst_t *spi, uint TXPin, uint RXPin, uint SCKPin, uint CS
 }
 
 /* InitComponent
- * Args: SPI Instance (uint), TX Pin (uint), RX Pin (uint), SCK Pin (uint), CSN Pin (uint), Baud Rate (uint)
- * Description: Initialize the SPI, set as slave, and set up GPIO.
+ * Initialize SPI, set as slave, and set up GPIO.
  */
 void SPISlave::SlaveInit()
 {
@@ -33,16 +32,17 @@ void SPISlave::SlaveInit()
     gpio_set_function(SCKPin, GPIO_FUNC_SPI);
     gpio_set_function(CSNPin, GPIO_FUNC_SPI);
 
+    //gpio_disable_pulls(CSNPin);
+
     gpio_set_oeover(TXPin, GPIO_OVERRIDE_LOW);
 }
 
 /* SlaveWrite
- * Args: data buffer (uint8_t *), data buffer size (size_t)
- * Description: Write buffer data over the appropriate SPI module.
- *              If the master requested data or identification, return true.
- *              Otherwise, return false.
+ * Write buffer data over the appropriate SPI module.
+ * If the master requested data or identification, return true.
+ * Otherwise, return false.
  */
-bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
+bool SPISlave::SlaveReadWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
 {
     // Set the last output buffer byte to the verify byte
     out_buf[len-1] = (uint8_t) VERIFY_BYTE;
@@ -61,7 +61,7 @@ bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
         //Read/Write data
         spi_write_read_blocking(spi, out_buf, in_buf, BUF_LEN);
 
-        // Overide the output enable to disable, in case the Pico is not selected but driving the TX pin
+        // Overide the output enable to disable, in case the RP2040 is not selected but driving the TX pin
         gpio_set_oeover(TXPin, GPIO_OVERRIDE_LOW);
 
         return true;
@@ -77,7 +77,7 @@ bool SPISlave::SlaveWrite(uint8_t *out_buf, uint8_t *in_buf, size_t len)
         //Write Identifier 
         spi_write_blocking(spi, buf, 1);
 
-        // Overide the output enable to disable, in case the Pico is not selected but driving the TX pin
+        // Overide the output enable to disable, in case the RP2040 is not selected but driving the TX pin
         gpio_set_oeover(TXPin, GPIO_OVERRIDE_LOW);
 
         return true;

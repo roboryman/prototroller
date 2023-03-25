@@ -1,6 +1,6 @@
 set(PICO_BOARD_HEADER_DIRS ${CMAKE_SOURCE_DIR}) # Custom master board config
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.13.0)
 
 # Pull in SDK (must be before project)
 include(pico_sdk_import.cmake)

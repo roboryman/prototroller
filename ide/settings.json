@@ -1,0 +1,40 @@
+// Copy launch.json, tasks.json, and settings.json to .vscode/
+// Note: Must copy openocd/contrib/60-openocd.rules to /etc/udev/rules.d and:
+// 1. add user to 'plugdev' group
+// 2. execute 'sudo udevadm trigger'
+// 3. execute 'sudo service udev restart'
+// Then, connect SWD lines, plug in the debugger, pass through using USBIPD, and everything should work.
+// To debug: make sure you have the Cortex-Debug extension, go to "Run and Debug", and choose the
+// "Prototroller Debug" configuration.
+// To flash: Ctrl+Shift+B Or select "Run Task" from terminal menu and select "Prototroller Flash".
+// NOTE: "Run without debugging" doesn't with with Cortex Debug, use the flash task instead.
+// IMPORTANT: Make sure to edit the path to your Pico SDK in settings.json (cmake environment) and launch.json (svdFile)
+{
+    // These settings tweaks to the cmake plugin will ensure
+    // that you debug using cortex-debug instead of trying to launch
+    // a Pico binary on the host
+    "cmake.statusbar.advanced": {
+        "debug": {
+            "visibility": "hidden"
+        },
+        "launch": {
+            "visibility": "hidden"
+        },
+        "build": {
+            "visibility": "default"
+        },
+        "buildTarget": {
+            "visibility": "default"
+        },
+    },
+    "cmake.buildBeforeRun": true,
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "other": "settings",
+    "cmake.configureArgs": [
+            "-DPICO_BOARD=prototroller",
+            "-DPICO_PLATFORM=rp2040"
+    ],
+    "cmake.environment": {
+        "PICO_SDK_PATH":"~/pico-sdk"
+    }
+}

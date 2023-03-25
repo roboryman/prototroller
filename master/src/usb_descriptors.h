@@ -25,6 +25,38 @@
 #ifndef USB_DESCRIPTORS_H_
 #define USB_DESCRIPTORS_H_
 
+// Gamepad Report Descriptor for Prototroller
+// Support the maximum for each component, column wise (5 columns = 5 devices)
+// Refer to TUD_HID_REPORT_DESC_GAMEPAD template in hid_device.h
+#define TUD_HID_REPORT_DESC_GAMEPAD_PROTOTROLLER(...) \
+  HID_USAGE_PAGE ( HID_USAGE_PAGE_DESKTOP     )                 ,\
+  HID_USAGE      ( HID_USAGE_DESKTOP_GAMEPAD  )                 ,\
+  HID_COLLECTION ( HID_COLLECTION_APPLICATION )                 ,\
+    __VA_ARGS__ \
+    HID_USAGE_PAGE     ( HID_USAGE_PAGE_BUTTON                  ) ,\
+    HID_USAGE_MIN      ( 1                                      ) ,\
+    HID_USAGE_MAX      ( 16                                     ) ,\
+    HID_LOGICAL_MIN    ( 0                                      ) ,\
+    HID_LOGICAL_MAX    ( 1                                      ) ,\
+    HID_REPORT_COUNT   ( 16                                     ) ,\
+    HID_REPORT_SIZE    ( 1                                      ) ,\
+    HID_INPUT          ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+    HID_USAGE_PAGE     ( HID_USAGE_PAGE_DESKTOP                 ) ,\
+    HID_USAGE          ( HID_USAGE_DESKTOP_X                    ) ,\
+    HID_USAGE          ( HID_USAGE_DESKTOP_Y                    ) ,\
+    HID_USAGE          ( HID_USAGE_DESKTOP_Z                    ) ,\
+    HID_USAGE          ( HID_USAGE_DESKTOP_RZ                   ) ,\
+    HID_USAGE          ( HID_USAGE_DESKTOP_RX                   ) ,\
+    HID_USAGE          ( HID_USAGE_DESKTOP_RY                   ) ,\
+    HID_USAGE          ( HID_USAGE_DESKTOP_SLIDER               ) ,\
+    HID_USAGE          ( HID_USAGE_DESKTOP_SLIDER               ) ,\
+    HID_LOGICAL_MIN    ( 0x81                                   ) ,\
+    HID_LOGICAL_MAX    ( 0x7f                                   ) ,\
+    HID_REPORT_COUNT   ( 8                                      ) ,\
+    HID_REPORT_SIZE    ( 16                                     ) ,\
+    HID_INPUT          ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+  HID_COLLECTION_END \
+
 enum
 {
   REPORT_ID_KEYBOARD = 1,
@@ -32,6 +64,16 @@ enum
   REPORT_ID_CONSUMER_CONTROL,
   REPORT_ID_GAMEPAD,
   REPORT_ID_COUNT
+};
+
+enum
+{
+  REPORT_ID_COLUMN_0 = 1,
+  REPORT_ID_COLUMN_1,
+  REPORT_ID_COLUMN_2,
+  REPORT_ID_COLUMN_3,
+  REPORT_ID_COLUMN_4,
+  REPORT_ID_COLUMN_COUNT
 };
 
 #endif /* USB_DESCRIPTORS_H_ */

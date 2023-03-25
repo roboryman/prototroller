@@ -44,6 +44,10 @@
   #define BOARD_DEVICE_RHPORT_NUM     0
 #endif
 
+#ifndef BOARD_TUD_RHPORT
+#define BOARD_TUD_RHPORT      0
+#endif
+
 // RHPort max operational speed can defined by board.mk
 // Default to Highspeed for MCU with internal HighSpeed PHY (can be port specific), otherwise FullSpeed
 #ifndef BOARD_DEVICE_RHPORT_SPEED
@@ -63,6 +67,7 @@
 #else
   #error "Incorrect RHPort configuration"
 #endif
+
 
 #ifndef CFG_TUSB_OS
 #define CFG_TUSB_OS               OPT_OS_NONE
@@ -96,13 +101,13 @@
 
 //------------- CLASS -------------//
 #define CFG_TUD_HID               1
-#define CFG_TUD_CDC               1
+#define CFG_TUD_CDC               2
 #define CFG_TUD_MSC               0
 #define CFG_TUD_MIDI              0
 #define CFG_TUD_VENDOR            0
 
 // HID buffer size Should be sufficient to hold ID (if any) + Data
-#define CFG_TUD_HID_EP_BUFSIZE    16
+#define CFG_TUD_HID_EP_BUFSIZE    64
 
 //#define CFG_TUD_CDC_RX_BUFSIZE   (TUD_OPT_HIGH_SPEED ? 512 : 64)
 //#define CFG_TUD_CDC_TX_BUFSIZE   (TUD_OPT_HIGH_SPEED ? 512 : 64)
