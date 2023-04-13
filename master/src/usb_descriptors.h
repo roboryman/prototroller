@@ -50,8 +50,8 @@
     HID_USAGE          ( HID_USAGE_DESKTOP_RY                   ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_SLIDER               ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_SLIDER               ) ,\
-    HID_LOGICAL_MIN    ( 0x81                                   ) ,\
-    HID_LOGICAL_MAX    ( 0x7f                                   ) ,\
+    HID_LOGICAL_MIN_N  ( -2048, 2                               ) ,\
+    HID_LOGICAL_MAX_N  ( 2047,  2                               ) ,\
     HID_REPORT_COUNT   ( 8                                      ) ,\
     HID_REPORT_SIZE    ( 16                                     ) ,\
     HID_INPUT          ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
