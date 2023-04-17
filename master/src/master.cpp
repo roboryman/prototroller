@@ -12,7 +12,7 @@
 #include "../../commons.h"
 
 // Uncomment to run in debug mode
-#define DEBUG 0
+//#define DEBUG 0
 
 //--------------------------------------------------------------------+
 // Types and Enums
