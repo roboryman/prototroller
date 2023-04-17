@@ -26,8 +26,9 @@
 #define USB_DESCRIPTORS_H_
 
 // Gamepad Report Descriptor for Prototroller
-// Support the maximum for each component, column wise (5 columns = 5 devices)
+// Support the maximum for each component
 // Refer to TUD_HID_REPORT_DESC_GAMEPAD template in hid_device.h
+// Note: May not be portable, depending on little-endian or big-endian device.
 #define TUD_HID_REPORT_DESC_GAMEPAD_PROTOTROLLER(...) \
   HID_USAGE_PAGE ( HID_USAGE_PAGE_DESKTOP     )                 ,\
   HID_USAGE      ( HID_USAGE_DESKTOP_GAMEPAD  )                 ,\
@@ -45,9 +46,9 @@
     HID_USAGE          ( HID_USAGE_DESKTOP_X                    ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_Y                    ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_Z                    ) ,\
-    HID_USAGE          ( HID_USAGE_DESKTOP_RZ                   ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_RX                   ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_RY                   ) ,\
+    HID_USAGE          ( HID_USAGE_DESKTOP_RZ                   ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_SLIDER               ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_SLIDER               ) ,\
     HID_LOGICAL_MIN_N  ( -2048, 2                               ) ,\
