@@ -14,6 +14,9 @@
 // Uncomment to run in debug mode
 //#define DEBUG 0
 
+// Uncomment to print out verbose status information to the serial endpoint
+//#define VERBOSE_SERIAL 0
+
 //--------------------------------------------------------------------+
 // Types and Enums
 //--------------------------------------------------------------------+
@@ -76,7 +79,7 @@ moduleID_t module_IDs[MAX_MODULES] = {DISCONNECTED};
 // Module Assigned Report Data Store 
 assigned_t assigned[MAX_MODULES];
 
-//Analog Averaging data
+// Analog Averaging data
 gamepad_report_t averages;
 
 // Keep track of free (unassigned) axes
@@ -153,7 +156,7 @@ void print_buf(uint8_t buf[], size_t len)
 void print_report(uint8_t report_id, gamepad_report_t *report)
 {
     printf("===========================\n");
-    printf("GAMEPAD REPORT FOR COLUMN %01d\n", report_id);
+    printf("GAMEPAD REPORT FOR VIRTUAL CONTROLLER %01d\n", report_id);
     printf("===========================\n");
 
     printf("DIGITALS       : 0x%04x (%u)\n", report->digitals, report->digitals);
@@ -424,7 +427,7 @@ uint8_t assign_analog_data(gamepad_report_t *gamepad_report, uint8_t cnt, int16_
     return cnt + len;
 }
 
-// Send a gamepad report for the report id / column
+// Send a gamepad report for the report id / virtual controller
 void send_hid_report(uint8_t report_id)
 {
     // Skip sending this report if the HID endpoint is not ready
@@ -749,10 +752,6 @@ void modules_task(void)
     // Initially no connected modules
     bool connectedModules = false;
 
-    // The gamepad reports for analog and digital components
-    // gamepad_report_t *analog_report = gamepad_report;
-    // gamepad_report_t *digital_report = gamepad_report;
-    
     // Default gamepad report is the first report
     gamepad_report_t *report = gamepad_report;
 
@@ -762,14 +761,14 @@ void modules_task(void)
 
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
-        // Reset digital and analog count for each column report
+        // Reset digital and analog count for each virtual controller report
         // if(module % 4 == 0)
         // {
         //     digital_count = 0;
         //     analog_count  = 0;
         // }
 
-        // If this is the beginning of a new column report, set the struct accordingly
+        // If this is the beginning of a new report, set the struct accordingly
         //if     (module == 4)  column_report = &gamepad_report_col_1;
         //else if(module == 8)  column_report = &gamepad_report_col_2;
         //else if(module == 12) column_report = &gamepad_report_col_3;
@@ -825,12 +824,12 @@ void modules_task(void)
                     //Module has failed to reconnect
                     error_counts[module] = 0;
                     module_IDs[module] = DISCONNECTED;
-                    printf("Module %u Has disconnected or malfunctioned", module);
+                    printf("[M%u] Disconnected or malfunctioned", module);
                     printf("\n");
                 } else 
                 {
                     module_IDs[module] = ERROR_STATE;
-                    printf("Module %u appears to have sent invalid or absent data: ", module);
+                    printf("[M%u] Sent invalid or absent data: ", module);
                     printf(module_names[module_IDs[module]]);
                     printf("\n");
                     print_buf(in_buf,BUF_LEN);
@@ -853,11 +852,12 @@ void modules_task(void)
                 case BUTTON_MOMENTARY:
                     {
                         // If the button (active-low) is pressed, mask a bit
-                        //digital_report->digitals |= ((in_buf[0]==0x00) << digital_count); 
                         report->digitals |= ((in_buf[0]==0x00) << assigned[module].button0);
 
-                        // Increment the number of digital inputs for this column
-                        //digital_count++;
+                        #if defined(VERBOSE_SERIAL)
+                        printf("[M%u] Button: %u\n", module, ((in_buf[0]==0x00) << assigned[module].button0));
+                        printf("[M%u] Button Spot: %u\n", module, assigned[module].button0);
+                        #endif
                     }
 
                     break;
@@ -866,27 +866,22 @@ void modules_task(void)
                 case XYAB:
                     {
                         // Mask any bits
-                        // digital_report->digitals |= ((in_buf[0]==0x00) << digital_count); 
-                        // digital_report->digitals |= ((in_buf[1]==0x00) << (digital_count+1)); 
-                        // digital_report->digitals |= ((in_buf[2]==0x00) << (digital_count+2)); 
-                        // digital_report->digitals |= ((in_buf[3]==0x00) << (digital_count+3)); 
                         report->digitals |= ((in_buf[0]==0x00) << assigned[module].button0);
                         report->digitals |= ((in_buf[1]==0x00) << assigned[module].button1);
                         report->digitals |= ((in_buf[2]==0x00) << assigned[module].button2);
                         report->digitals |= ((in_buf[3]==0x00) << assigned[module].button3);
 
-                        // printf("Button DPAD 0: %u \n",((in_buf[0]==0x00) << assigned[module].button0));
-                        // printf("Button DPAD 0 Spot: %u \n",assigned[module].button0);
-                        // printf("Button DPAD 1: %u \n",((in_buf[1]=0x00) << assigned[module].button1));
-                        // printf("Button DPAD 0 Spot: %u \n",assigned[module].button1);
-                        // printf("Button DPAD 2: %u \n",((in_buf[2]=0x00) << assigned[module].button2)); 
-                        // printf("Button DPAD 0 Spot: %u \n",assigned[module].button2);
-                        // printf("Button DPAD 3: %u \n",((in_buf[3]=0x00) << assigned[module].button3));
-                        // printf("Button DPAD 0 Spot: %u \n",assigned[module].button3);
-                        // printf("\n");
-
-                        // Increment the number of digital inputs for this column
-                        //digital_count += 4;
+                        #if defined(VERBOSE_SERIAL)
+                        printf("[M%u] Button XYAB/DPAD 0: %u \n", module, ((in_buf[0]==0x00) << assigned[module].button0));
+                        printf("[M%u] Button XYAB/DPAD 0 Spot: %u \n", module, assigned[module].button0);
+                        printf("[M%u] Button XYAB/DPAD 1: %u \n", module, ((in_buf[1]=0x00) << assigned[module].button1));
+                        printf("[M%u] Button XYAB/DPAD 0 Spot: %u \n", module, assigned[module].button1);
+                        printf("[M%u] Button XYAB/DPAD 2: %u \n", module, ((in_buf[2]=0x00) << assigned[module].button2)); 
+                        printf("[M%u] Button XYAB/DPAD 0 Spot: %u \n", module, assigned[module].button2);
+                        printf("[M%u] Button XYAB/DPAD 3: %u \n", module, ((in_buf[3]=0x00) << assigned[module].button3));
+                        printf("[M%u] Button XYAB/DPAD 0 Spot: %u \n", module, assigned[module].button3);
+                        printf("\n");
+                        #endif
                     }
                     break;
     
@@ -901,9 +896,11 @@ void modules_task(void)
                         // Convert data into signed holders between -2048 and 2047
                         int16_t delta_x = (int16_t) (x - 2048);
                         int16_t delta_y = (int16_t) (y - 2048);
+
                         // Apply an offset Based on the resst position of the joystick
                         delta_x -= 160;
                         delta_y += 890;
+
                         //Apply Averaging
                         #define min(x, y) ((x) > (y) ? (y) : (x))
                         float newAvg = min(1,0.009 /0.1);
@@ -919,23 +916,21 @@ void modules_task(void)
                         //analog_count = assign_analog_data(analog_report, analog_count, joystick_data, 2);
                         report->analogs[assigned[module].axis0] = newValY*-3;
                         report->analogs[assigned[module].axis1] = newValX*-3;
+
+                        #if defined(VERBOSE_SERIAL)
+                        printf("[M%u] Joystick: X=%d | Y=%d\n",
+                            module,
+                            report->analogs[assigned[module].axis0],
+                            report->analogs[assigned[module].axis1]
+                        );
+                        printf("[M%u] Joystick Spot X: %u\n", module, assigned[module].axis0);
+                        printf("[M%u] Joystick Spot Y: %u\n", module, assigned[module].axis1);
+                        #endif
                     }
 
                     break;
 
                 case SLIDER:
-                    {
-                        // Potentiometer data is 12-bits
-                        uint16_t wiper = (in_buf[1] << 8) | in_buf[0];
-
-                        // Convert data into a signed holder between -2048 and 2047
-                        int16_t delta_wiper = (int16_t) (wiper - 2048);
-
-                        // Assign the potentiometer data to its one assigned analog axis
-                        //analog_count = assign_analog_data(analog_report, analog_count, &delta_wiper, 1);
-                        report->analogs[assigned[module].axis0] = delta_wiper;
-                    }
-                    break;
                 case TWIST_SWITCH:
                     {
                         // Potentiometer data is 12-bits
@@ -947,24 +942,34 @@ void modules_task(void)
                         // Assign the potentiometer data to its one assigned analog axis
                         //analog_count = assign_analog_data(analog_report, analog_count, &delta_wiper, 1);
                         report->analogs[assigned[module].axis0] = delta_wiper;
+
+                        #if defined(VERBOSE_SERIAL)
+                        printf("[M%u] Slider/Twist Switch: %d\n",
+                            module,
+                            report->analogs[assigned[module].axis0]
+                        );
+                        printf("[M%u] Slider/Twist Switch Spot: %u\n", module, assigned[module].axis0);
+                        #endif
                     }
                     break;
 
                 case ACCEL:
                     {
-                        // Due to 8-axis limit of DirectInput, cannot support a full column of 3/4 accel/gyro (9/12 axes)
+                        // Due to 8-axis limit of DirectInput, cannot support an individual report of 3/4 accel/gyro (9/12 axes)
                         // Something like joystick + twist switch + accel + gyro would not work (9 axes)
                         // However, 2x twist switch + accel + gyro would work (8 axes)
                         // Or, a slider (1x2) + accel + gyro (7 axes)
+                        // Should split up, if necessary
                     }
                     break;
 
                 case GYRO:
                     {
-                        // Due to 8-axis limit of DirectInput, cannot support a full column of 3/4 accel/gyro (9/12 axes)
+                        // Due to 8-axis limit of DirectInput, cannot support an individual report of 3/4 accel/gyro (9/12 axes)
                         // Something like joystick + twist switch + accel + gyro would not work (9 axes)
                         // However, 2x twist switch + accel + gyro would work (8 axes)
                         // Or, a slider (1x2) + accel + gyro (7 axes)
+                        // Should split up, if necessary
                     }
                     break;
 
@@ -984,14 +989,15 @@ void modules_task(void)
                         if(identification != DISCONNECTED){
                             error_counts[module] = 0;
                             module_IDs[module] = identification;
-                            printf("Module %u Reconnected! \n", module);
+                            printf("[M%u] Reconnected! \n", module);
                         } else {
                             error_counts[module] += 1;
-                            printf("Module %u Reconnection attempt failed \n", module);
+                            printf("[M%u] Reconnection attempt failed \n", module);
 
                         }
                     }
                     break;
+
                 default:
                     break;
             }
@@ -1013,8 +1019,7 @@ void modules_task(void)
     }
 
     #if defined(DEBUG)
-    // Mock gamepad reports for each column
-
+    // Mock data in the gamepad report
     report->analogs[RY] = (int16_t) (adc_read() - 2048);
     report->analogs[RZ] = (int16_t) (adc_read() - 2048);
 
