@@ -76,6 +76,9 @@ moduleID_t module_IDs[MAX_MODULES] = {DISCONNECTED};
 // Module Assigned Report Data Store 
 assigned_t assigned[MAX_MODULES];
 
+//Analog Averaging data
+gamepad_report_t averages;
+
 // Keep track of free (unassigned) axes
 // Should extend this to support 5 reports.
 bool free_axes[8] = {true};
@@ -813,6 +816,7 @@ void modules_task(void)
 
             // Read module data over SPI
             bool valid = master.MasterReadWrite(out_buf, in_buf, BUF_LEN);
+            if(!valid) { valid = master.MasterReadWrite(out_buf, in_buf, BUF_LEN);}
 
             // If read is invalid, set the module as disconnected
             if(!valid)
@@ -829,6 +833,7 @@ void modules_task(void)
                     printf("Module %u appears to have sent invalid or absent data: ", module);
                     printf(module_names[module_IDs[module]]);
                     printf("\n");
+                    print_buf(in_buf,BUF_LEN);
                 }
 
             }
@@ -857,18 +862,28 @@ void modules_task(void)
 
                     break;
 
-                case XYAB:
                 case DPAD:
+                case XYAB:
                     {
                         // Mask any bits
                         // digital_report->digitals |= ((in_buf[0]==0x00) << digital_count); 
                         // digital_report->digitals |= ((in_buf[1]==0x00) << (digital_count+1)); 
                         // digital_report->digitals |= ((in_buf[2]==0x00) << (digital_count+2)); 
                         // digital_report->digitals |= ((in_buf[3]==0x00) << (digital_count+3)); 
-                        report->digitals |= ((in_buf[0]=0x00) << assigned[module].button0);
-                        report->digitals |= ((in_buf[1]=0x00) << assigned[module].button1);
-                        report->digitals |= ((in_buf[2]=0x00) << assigned[module].button2);
-                        report->digitals |= ((in_buf[3]=0x00) << assigned[module].button3);
+                        report->digitals |= ((in_buf[0]==0x00) << assigned[module].button0);
+                        report->digitals |= ((in_buf[1]==0x00) << assigned[module].button1);
+                        report->digitals |= ((in_buf[2]==0x00) << assigned[module].button2);
+                        report->digitals |= ((in_buf[3]==0x00) << assigned[module].button3);
+
+                        // printf("Button DPAD 0: %u \n",((in_buf[0]==0x00) << assigned[module].button0));
+                        // printf("Button DPAD 0 Spot: %u \n",assigned[module].button0);
+                        // printf("Button DPAD 1: %u \n",((in_buf[1]=0x00) << assigned[module].button1));
+                        // printf("Button DPAD 0 Spot: %u \n",assigned[module].button1);
+                        // printf("Button DPAD 2: %u \n",((in_buf[2]=0x00) << assigned[module].button2)); 
+                        // printf("Button DPAD 0 Spot: %u \n",assigned[module].button2);
+                        // printf("Button DPAD 3: %u \n",((in_buf[3]=0x00) << assigned[module].button3));
+                        // printf("Button DPAD 0 Spot: %u \n",assigned[module].button3);
+                        // printf("\n");
 
                         // Increment the number of digital inputs for this column
                         //digital_count += 4;
@@ -886,17 +901,41 @@ void modules_task(void)
                         // Convert data into signed holders between -2048 and 2047
                         int16_t delta_x = (int16_t) (x - 2048);
                         int16_t delta_y = (int16_t) (y - 2048);
+                        // Apply an offset Based on the resst position of the joystick
+                        delta_x -= 160;
+                        delta_y += 890;
+                        //Apply Averaging
+                        #define min(x, y) ((x) > (y) ? (y) : (x))
+                        float newAvg = min(1,0.009 /0.1);
+                        float oldAvg = 1 - newAvg;
+
+                        int16_t newValX = (int16_t) ((newAvg * delta_x) + (oldAvg * averages.analogs[assigned[module].axis0]));
+                        averages.analogs[assigned[module].axis0] = newValX;
+                        int16_t newValY = (int16_t) ((newAvg * delta_y) + (oldAvg * averages.analogs[assigned[module].axis1]));
+                        averages.analogs[assigned[module].axis1] = newValY;
 
                         // Set the joystick data on its assigned axes
                         //int16_t joystick_data[2] = { delta_x, delta_y };
                         //analog_count = assign_analog_data(analog_report, analog_count, joystick_data, 2);
-                        report->analogs[assigned[module].axis0] = delta_x;
-                        report->analogs[assigned[module].axis1] = delta_y;
+                        report->analogs[assigned[module].axis0] = newValY*-3;
+                        report->analogs[assigned[module].axis1] = newValX*-3;
                     }
 
                     break;
 
                 case SLIDER:
+                    {
+                        // Potentiometer data is 12-bits
+                        uint16_t wiper = (in_buf[1] << 8) | in_buf[0];
+
+                        // Convert data into a signed holder between -2048 and 2047
+                        int16_t delta_wiper = (int16_t) (wiper - 2048);
+
+                        // Assign the potentiometer data to its one assigned analog axis
+                        //analog_count = assign_analog_data(analog_report, analog_count, &delta_wiper, 1);
+                        report->analogs[assigned[module].axis0] = delta_wiper;
+                    }
+                    break;
                 case TWIST_SWITCH:
                     {
                         // Potentiometer data is 12-bits
