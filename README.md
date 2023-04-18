@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="assets/logo.png" width="250" align="center" />
-  <img src="assets/side_view_no_modules.JPEG" width="250" align="center" />
+  <img src="assets/logo.png" width="300" align="center" />
+  <img src="assets/side_view_modules.JPEG" width="300" align="center" />
 </p>
 
 ## About
@@ -68,11 +68,9 @@ The component interface boards are veroboards sitting above the module board hea
 
 This would not be a very comfortable controller to use without enclosures.
 
-The master board is enclosed by a chassis and grips. The master board is screwed to the chassis..
+The master board is enclosed by a chassis and grips. The master board is screwed to the chassis.
 
 The module enclosures contain the module board and component interface boards, but do not cover the component.
-
-Note: The mockup below is a bit outdated in terms of dimensions, but demonstrates the overall design well enough (including enclosures).
 
 <p align="center">
   <img src="assets/thumb_switch_close_up.JPEG" width="600" align="center" />
@@ -174,5 +172,5 @@ Thank you to user testing participants for valuable feedback. Their insights and
 Thank you to families, friends, and loved ones for their unwavering support and encouragement. Their belief in our abilities and commitment to our success has been a constant source of motivation and inspiration.
 
 <p align="center">
-  <img src="assets/side_view_modules.JPEG" width="600" align="center" />
+  <img src="assets/side_view_no_modules.JPEG" width="600" align="center" />
 </p>
