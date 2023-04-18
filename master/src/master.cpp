@@ -14,6 +14,9 @@
 // Uncomment to run in debug mode
 //#define DEBUG 0
 
+// Uncomment to print out verbose status information to the serial endpoint
+//#define VERBOSE_SERIAL 0
+
 //--------------------------------------------------------------------+
 // Types and Enums
 //--------------------------------------------------------------------+
@@ -28,7 +31,6 @@ enum
 };
 
 // Prototroller HID Gamepad Report
-// Must support the maximum number of each input module per column
 typedef struct
 {
     uint16_t    digitals;   // Digital inputs (momentary button, maintained button, D-pad, XYAB, etc.)
@@ -49,12 +51,8 @@ typedef struct
 // Globals
 //--------------------------------------------------------------------+
 
-// Gamepad reports for each column
-gamepad_report_t gamepad_report_col_0,
-gamepad_report_col_1, 
-gamepad_report_col_2,
-gamepad_report_col_3,
-gamepad_report_col_4;
+// Gamepad reports
+gamepad_report_t gamepad_report[5];
 
 // CDC Command Data Store
 cdc_commands_t commands;
@@ -78,6 +76,16 @@ uint8_t error_counts[MAX_MODULES] = {0};
 // Module Identification Data Store
 moduleID_t module_IDs[MAX_MODULES] = {DISCONNECTED};
 
+// Module Assigned Report Data Store 
+assigned_t assigned[MAX_MODULES];
+
+// Analog Averaging data
+gamepad_report_t averages;
+
+// Keep track of free (unassigned) axes
+// Should extend this to support 5 reports.
+bool free_axes[8] = {true};
+
 // Rescan ISR flag
 volatile bool rescan = false;
 
@@ -92,6 +100,10 @@ static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
 
 // Interval in ms for report message task
 static uint32_t report_message_interval_ms = PRINT_REPORT_DELAY;
+
+// Track counts as we poll each slot
+uint8_t analog_count = 0;
+uint8_t digital_count = 0;
 
 //--------------------------------------------------------------------+
 // Prototypes
@@ -144,7 +156,7 @@ void print_buf(uint8_t buf[], size_t len)
 void print_report(uint8_t report_id, gamepad_report_t *report)
 {
     printf("===========================\n");
-    printf("GAMEPAD REPORT FOR COLUMN %01d\n", report_id);
+    printf("GAMEPAD REPORT FOR VIRTUAL CONTROLLER %01d\n", report_id);
     printf("===========================\n");
 
     printf("DIGITALS       : 0x%04x (%u)\n", report->digitals, report->digitals);
@@ -161,6 +173,16 @@ void print_report(uint8_t report_id, gamepad_report_t *report)
 // Rescans for connected modules and update identification.
 void rescan_modules()
 {
+    // Reset all axes to free
+    memset(free_axes, 1, 8*sizeof(bool));
+
+    // Start assigning axes and buttons on report 0
+    //uint8_t report_num = 0;
+
+    button_idx_t button_idx = 0;
+    axis_idx_t axis0 = X;
+    axis_idx_t axis1 = Y;
+
     printf("[!] Rescanning for active modules...\n");
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
@@ -181,6 +203,128 @@ void rescan_modules()
         printf("[%c] Module %u is identified as ", status, module);
         printf(module_names[identification]);
         printf(".\n");
+
+        if(identification != DISCONNECTED)
+        {
+            // Assign position in the HID report
+            // TODO: Expand to use all 5 reports, not just the first one
+            assigned[module].report_num = 0;
+
+            switch(identification)
+            {
+                case BUTTON_MAINTAINED:
+                case BUTTON_MOMENTARY:
+                    // Buttons are assigned FCFS, 0 through 15
+                    assigned[module].button0 = button_idx;
+                    button_idx += 1;
+                    break;
+
+                case XYAB:
+                case DPAD:
+                    assigned[module].button0 = button_idx;
+                    assigned[module].button1 = button_idx+1;
+                    assigned[module].button2 = button_idx+2;
+                    assigned[module].button3 = button_idx+3;
+                    button_idx += 4;
+                    break;
+
+                case JOYSTICK:
+                    if(free_axes[X] && free_axes[Y]) // Left joystick
+                    {
+                        axis0 = X;
+                        axis1 = Y;
+                    }
+                    else if(free_axes[Z] && free_axes[RX]) // Right joystick
+                    {
+                        axis0 = Z;
+                        axis1 = RX;
+                    }
+                    else if(free_axes[RY] && free_axes[RZ]) // Backup 1
+                    {
+                        axis0 = RY;
+                        axis1 = RZ;
+                    }
+                    else if(free_axes[SLIDER0] && free_axes[SLIDER1]) // Backup 2
+                    {
+                        axis0 = SLIDER0;
+                        axis1 = SLIDER1;
+                    }
+                    else // Not enough axes
+                    {
+                        // TODO: Wrap to next report
+                        axis0 = X;
+                        axis1 = Y;
+                    }
+                    assigned[module].axis0 = axis0;
+                    assigned[module].axis1 = axis1;
+                    free_axes[axis0] = false;
+                    free_axes[axis1] = false;
+                    break;
+
+                case SLIDER:
+                    if(free_axes[SLIDER0])
+                        axis0 = SLIDER0;
+                    else if(free_axes[SLIDER1])
+                        axis0 = SLIDER1;
+                    else if(free_axes[RY])
+                        axis0 = RY;
+                    else if(free_axes[RZ])
+                        axis0 = RZ;
+                    else if(free_axes[Z])
+                        axis0 = Z;
+                    else if(free_axes[RX])
+                        axis0 = RX;
+                    else if(free_axes[X])
+                        axis0 = X;
+                    else if(free_axes[Y])
+                        axis0 = Y;
+                    else // Not enough axes.
+                    {
+                        // TODO: Wrap to next report
+                        axis0 = SLIDER0;
+                    }
+                    assigned[module].axis0 = axis0;
+                    free_axes[axis0] = false;
+                    break;
+
+                case TWIST_SWITCH:
+                    if(free_axes[RY])
+                        axis0 = RY;
+                    else if(free_axes[RZ])
+                        axis0 = RZ;
+                    else if(free_axes[SLIDER0])
+                        axis0 = SLIDER0;
+                    else if(free_axes[SLIDER1])
+                        axis0 = SLIDER1;
+                    else if(free_axes[Z])
+                        axis0 = Z;
+                    else if(free_axes[RX])
+                        axis0 = RX;
+                    else if(free_axes[X])
+                        axis0 = X;
+                    else if(free_axes[Y])
+                        axis0 = Y;
+                    else // Not enough axes.
+                    {
+                        // TODO: Wrap to next report
+                        axis0 = RY;
+                    }
+                    assigned[module].axis0 = axis0;
+                    free_axes[axis0] = false;
+                    break;
+
+                case ACCEL:
+                    // <unimplemented>
+                    break;
+
+                case GYRO:
+                    // <unimplemented>
+                    break;
+
+                default:
+                    break;
+            }
+        }
     }
 
     // Rescan finished, so reset the flag
@@ -262,63 +406,63 @@ void init_gpio()
 }
 
 // Assign analog data to the specified report, clamping at the maximum allowed axes
-uint8_t assign_analog_data(gamepad_report_t *column_report, uint8_t analog_count, int16_t *data, uint8_t len)
+uint8_t assign_analog_data(gamepad_report_t *gamepad_report, uint8_t cnt, int16_t *data, uint8_t len)
 {
     // Calculate the maximum number of axes
-    uint8_t max = sizeof(column_report->analogs) / sizeof(column_report->analogs[0]);
+    uint8_t max = sizeof(gamepad_report->analogs) / sizeof(gamepad_report->analogs[0]);
 
     // If the total number of axes will surpass the limit, then clamp it
-    if((analog_count + len) > max)
+    if((cnt + len) > max)
     {
-        len = max - analog_count;
+        len = max - cnt;
     }
 
     // Assign the data
     for(uint8_t i = 0; i < len; i++)
     {
-        column_report->analogs[analog_count+i] = data[i];
+        gamepad_report->analogs[cnt+i] = data[i];
     }
     
     // Return the new analog count
-    return analog_count + len;
+    return cnt + len;
 }
 
-// Send a gamepad report for the report id / column
+// Send a gamepad report for the report id / virtual controller
 void send_hid_report(uint8_t report_id)
 {
     // Skip sending this report if the HID endpoint is not ready
     if ( !tud_hid_ready() ) return;
 
-    // Send the appropraite gamepad report based on the report ID (column)
+    // Send the appropraite gamepad report based on the report ID
     switch(report_id)
     {
-        case REPORT_ID_COLUMN_0:
+        case REPORT_ID_0:
         {
-            tud_hid_report(REPORT_ID_COLUMN_0, &gamepad_report_col_0, sizeof(gamepad_report_col_0));
+            tud_hid_report(REPORT_ID_0, gamepad_report, sizeof(gamepad_report_t));
         }
         break;
 
-        case REPORT_ID_COLUMN_1:
+        case REPORT_ID_1:
         {
-            tud_hid_report(REPORT_ID_COLUMN_1, &gamepad_report_col_1, sizeof(gamepad_report_col_1));
+            tud_hid_report(REPORT_ID_1, gamepad_report+1, sizeof(gamepad_report_t));
         }
         break;
 
-        case REPORT_ID_COLUMN_2:
+        case REPORT_ID_2:
         {
-            tud_hid_report(REPORT_ID_COLUMN_2, &gamepad_report_col_2, sizeof(gamepad_report_col_2));
+            tud_hid_report(REPORT_ID_2, gamepad_report+2, sizeof(gamepad_report_t));
         }
         break;
 
-        case REPORT_ID_COLUMN_3:
+        case REPORT_ID_3:
         {
-            tud_hid_report(REPORT_ID_COLUMN_3, &gamepad_report_col_3, sizeof(gamepad_report_col_3));
+            tud_hid_report(REPORT_ID_3, gamepad_report+3, sizeof(gamepad_report_t));
         }
         break;
 
-        case REPORT_ID_COLUMN_4:
+        case REPORT_ID_4:
         {
-            tud_hid_report(REPORT_ID_COLUMN_4, &gamepad_report_col_4, sizeof(gamepad_report_col_4));
+            tud_hid_report(REPORT_ID_4, gamepad_report+4, sizeof(gamepad_report_t));
         }
         break;
 
@@ -358,7 +502,7 @@ void tud_resume_cb(void)
   blink_interval_ms = BLINK_MOUNTED;
 }
 
-// Invoked when a column report is successfully sent to host
+// Invoked when a gamepad report is successfully sent to host
 // Note: For composite reports, report[0] is report ID
 void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_t len)
 {
@@ -367,7 +511,13 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_
 
     uint8_t next_report_id = report[0] + 1u;
 
-    if (next_report_id < REPORT_ID_COLUMN_COUNT)
+    // Report 0 always sent. If we don't have data to send on the other reports... don't send the reports!
+    if(next_report_id == REPORT_ID_1 && (analog_count <= 8  && digital_count <= 16)) return;
+    if(next_report_id == REPORT_ID_2 && (analog_count <= 16 && digital_count <= 32)) return;
+    if(next_report_id == REPORT_ID_3 && (analog_count <= 24 && digital_count <= 48)) return;
+    if(next_report_id == REPORT_ID_4 && (analog_count <= 32 && digital_count <= 64)) return;
+
+    if (next_report_id < REPORT_ID_COUNT)
     {
         send_hid_report(next_report_id);
     }
@@ -456,8 +606,8 @@ void hid_task(void)
     }
     else
     {
-        // Kick-off the report chain here, starting with the first column
-        send_hid_report(REPORT_ID_COLUMN_0);
+        // Kick-off the report chain here, starting with the first gamepad report
+        send_hid_report(REPORT_ID_0);
     }
 }
 
@@ -576,11 +726,11 @@ void print_report_task(void)
 
     start_ms += report_message_interval_ms;
 
-    print_report(REPORT_ID_COLUMN_0, &gamepad_report_col_0);
-    print_report(REPORT_ID_COLUMN_1, &gamepad_report_col_1);
-    print_report(REPORT_ID_COLUMN_2, &gamepad_report_col_2);
-    print_report(REPORT_ID_COLUMN_3, &gamepad_report_col_3);
-    print_report(REPORT_ID_COLUMN_4, &gamepad_report_col_4);
+    print_report(REPORT_ID_0, gamepad_report  );
+    print_report(REPORT_ID_1, gamepad_report+1);
+    print_report(REPORT_ID_2, gamepad_report+2);
+    print_report(REPORT_ID_3, gamepad_report+3);
+    print_report(REPORT_ID_4, gamepad_report+4);
 }
 
 // Task to handshake and exchange data with modules over SPI, rescan, update gamepad reports, etc.
@@ -593,40 +743,58 @@ void modules_task(void)
     }
     
     // Clear the gamepad report structure
-    memset(&gamepad_report_col_0, 0, sizeof(gamepad_report_t));
-    memset(&gamepad_report_col_1, 0, sizeof(gamepad_report_t));
-    memset(&gamepad_report_col_2, 0, sizeof(gamepad_report_t));
-    memset(&gamepad_report_col_3, 0, sizeof(gamepad_report_t));
-    memset(&gamepad_report_col_4, 0, sizeof(gamepad_report_t));
+    memset(gamepad_report  , 0, sizeof(gamepad_report_t));
+    memset(gamepad_report+1, 0, sizeof(gamepad_report_t));
+    memset(gamepad_report+2, 0, sizeof(gamepad_report_t));
+    memset(gamepad_report+3, 0, sizeof(gamepad_report_t));
+    memset(gamepad_report+4, 0, sizeof(gamepad_report_t));
 
     // Initially no connected modules
     bool connectedModules = false;
 
-    // Track how many specific modules as we poll each slot
-    uint8_t digital_count = 0;
-    uint8_t analog_count = 0;
+    // Default gamepad report is the first report
+    gamepad_report_t *report = gamepad_report;
 
-    // The gamepad report for the current column
-    gamepad_report_t *column_report = &gamepad_report_col_0;
+    // Reset counts
+    // analog_count = 0;
+    // digital_count = 0;
 
     for(uint8_t module = 0; module < MAX_MODULES; module++)
     {
-        // Reset digital and analog count for each column report
-        if(module % 4 == 0)
-        {
-            digital_count = 0;
-            analog_count  = 0;
-        }
+        // Reset digital and analog count for each virtual controller report
+        // if(module % 4 == 0)
+        // {
+        //     digital_count = 0;
+        //     analog_count  = 0;
+        // }
 
-        // If this is the beginning of a new column report, set the struct accordingly
-        if     (module == 4)  column_report = &gamepad_report_col_1;
-        else if(module == 8)  column_report = &gamepad_report_col_2;
-        else if(module == 12) column_report = &gamepad_report_col_3;
-        else if(module == 16) column_report = &gamepad_report_col_4;
+        // If this is the beginning of a new report, set the struct accordingly
+        //if     (module == 4)  column_report = &gamepad_report_col_1;
+        //else if(module == 8)  column_report = &gamepad_report_col_2;
+        //else if(module == 12) column_report = &gamepad_report_col_3;
+        //else if(module == 16) column_report = &gamepad_report_col_4;
+
+        // Set the analog report based on the analog count
+        // if     (analog_count <= 8)  analog_report = gamepad_report;
+        // else if(analog_count <= 16) analog_report = gamepad_report+1;
+        // else if(analog_count <= 24) analog_report = gamepad_report+2;
+        // else if(analog_count <= 32) analog_report = gamepad_report+3;
+        // else if(analog_count <= 40) analog_report = gamepad_report+4;
+
+        // Set the digital report based on the digital count
+        // if     (digital_count <= 16) digital_report = gamepad_report;
+        // else if(digital_count <= 32) digital_report = gamepad_report+1;
+        // else if(digital_count <= 48) digital_report = gamepad_report+2;
+        // else if(digital_count <= 64) digital_report = gamepad_report+3;
+        // else if(digital_count <= 80) digital_report = gamepad_report+4;
+
         
-        // If this module is connected, exchange data over SPI and process into column report
+        // If this module is connected, exchange data over SPI and process into report
         if(module_IDs[module])
         {
+            // Get the correct report based on the assigned axes during rescan
+            report = gamepad_report + assigned[module].report_num;
+
             // Process output data into out_buf based on the modile identifier
             switch(module_IDs[module])
             {
@@ -647,6 +815,7 @@ void modules_task(void)
 
             // Read module data over SPI
             bool valid = master.MasterReadWrite(out_buf, in_buf, BUF_LEN);
+            if(!valid) { valid = master.MasterReadWrite(out_buf, in_buf, BUF_LEN);}
 
             // If read is invalid, set the module as disconnected
             if(!valid)
@@ -655,14 +824,15 @@ void modules_task(void)
                     //Module has failed to reconnect
                     error_counts[module] = 0;
                     module_IDs[module] = DISCONNECTED;
-                    printf("Module %u Has disconnected or malfunctioned", module);
+                    printf("[M%u] Disconnected or malfunctioned", module);
                     printf("\n");
                 } else 
                 {
                     module_IDs[module] = ERROR_STATE;
-                    printf("Module %u appears to have sent invalid or absent data: ", module);
+                    printf("[M%u] Sent invalid or absent data: ", module);
                     printf(module_names[module_IDs[module]]);
                     printf("\n");
+                    print_buf(in_buf,BUF_LEN);
                 }
 
             }
@@ -682,25 +852,36 @@ void modules_task(void)
                 case BUTTON_MOMENTARY:
                     {
                         // If the button (active-low) is pressed, mask a bit
-                        column_report->digitals |= ((in_buf[0]==0x00) << digital_count); 
+                        report->digitals |= ((in_buf[0]==0x00) << assigned[module].button0);
 
-                        // Increment the number of digital inputs for this column
-                        digital_count++;
+                        #if defined(VERBOSE_SERIAL)
+                        printf("[M%u] Button: %u\n", module, ((in_buf[0]==0x00) << assigned[module].button0));
+                        printf("[M%u] Button Spot: %u\n", module, assigned[module].button0);
+                        #endif
                     }
 
                     break;
 
-                case XYAB:
                 case DPAD:
+                case XYAB:
                     {
                         // Mask any bits
-                        column_report->digitals |= ((in_buf[0]==0x00) << digital_count); 
-                        column_report->digitals |= ((in_buf[1]==0x00) << (digital_count+1)); 
-                        column_report->digitals |= ((in_buf[2]==0x00) << (digital_count+2)); 
-                        column_report->digitals |= ((in_buf[3]==0x00) << (digital_count+3)); 
+                        report->digitals |= ((in_buf[0]==0x00) << assigned[module].button0);
+                        report->digitals |= ((in_buf[1]==0x00) << assigned[module].button1);
+                        report->digitals |= ((in_buf[2]==0x00) << assigned[module].button2);
+                        report->digitals |= ((in_buf[3]==0x00) << assigned[module].button3);
 
-                        // Increment the number of digital inputs for this column
-                        digital_count += 4;
+                        #if defined(VERBOSE_SERIAL)
+                        printf("[M%u] Button XYAB/DPAD 0: %u \n", module, ((in_buf[0]==0x00) << assigned[module].button0));
+                        printf("[M%u] Button XYAB/DPAD 0 Spot: %u \n", module, assigned[module].button0);
+                        printf("[M%u] Button XYAB/DPAD 1: %u \n", module, ((in_buf[1]=0x00) << assigned[module].button1));
+                        printf("[M%u] Button XYAB/DPAD 0 Spot: %u \n", module, assigned[module].button1);
+                        printf("[M%u] Button XYAB/DPAD 2: %u \n", module, ((in_buf[2]=0x00) << assigned[module].button2)); 
+                        printf("[M%u] Button XYAB/DPAD 0 Spot: %u \n", module, assigned[module].button2);
+                        printf("[M%u] Button XYAB/DPAD 3: %u \n", module, ((in_buf[3]=0x00) << assigned[module].button3));
+                        printf("[M%u] Button XYAB/DPAD 0 Spot: %u \n", module, assigned[module].button3);
+                        printf("\n");
+                        #endif
                     }
                     break;
     
@@ -716,9 +897,35 @@ void modules_task(void)
                         int16_t delta_x = (int16_t) (x - 2048);
                         int16_t delta_y = (int16_t) (y - 2048);
 
-                        // Assign the joystick data to two analog axes, if space is available
-                        int16_t joystick_data[2] = { delta_x, delta_y };
-                        analog_count = assign_analog_data(column_report, analog_count, joystick_data, 2);
+                        // Apply an offset Based on the resst position of the joystick
+                        delta_x -= 160;
+                        delta_y += 890;
+
+                        //Apply Averaging
+                        #define min(x, y) ((x) > (y) ? (y) : (x))
+                        float newAvg = min(1,0.009 /0.1);
+                        float oldAvg = 1 - newAvg;
+
+                        int16_t newValX = (int16_t) ((newAvg * delta_x) + (oldAvg * averages.analogs[assigned[module].axis0]));
+                        averages.analogs[assigned[module].axis0] = newValX;
+                        int16_t newValY = (int16_t) ((newAvg * delta_y) + (oldAvg * averages.analogs[assigned[module].axis1]));
+                        averages.analogs[assigned[module].axis1] = newValY;
+
+                        // Set the joystick data on its assigned axes
+                        //int16_t joystick_data[2] = { delta_x, delta_y };
+                        //analog_count = assign_analog_data(analog_report, analog_count, joystick_data, 2);
+                        report->analogs[assigned[module].axis0] = newValY*-3;
+                        report->analogs[assigned[module].axis1] = newValX*-3;
+
+                        #if defined(VERBOSE_SERIAL)
+                        printf("[M%u] Joystick: X=%d | Y=%d\n",
+                            module,
+                            report->analogs[assigned[module].axis0],
+                            report->analogs[assigned[module].axis1]
+                        );
+                        printf("[M%u] Joystick Spot X: %u\n", module, assigned[module].axis0);
+                        printf("[M%u] Joystick Spot Y: %u\n", module, assigned[module].axis1);
+                        #endif
                     }
 
                     break;
@@ -732,26 +939,37 @@ void modules_task(void)
                         // Convert data into a signed holder between -2048 and 2047
                         int16_t delta_wiper = (int16_t) (wiper - 2048);
 
-                        // Assign the potentiometer data to one analog axis, if space is available
-                        analog_count = assign_analog_data(column_report, analog_count, &delta_wiper, 1);
+                        // Assign the potentiometer data to its one assigned analog axis
+                        //analog_count = assign_analog_data(analog_report, analog_count, &delta_wiper, 1);
+                        report->analogs[assigned[module].axis0] = delta_wiper;
+
+                        #if defined(VERBOSE_SERIAL)
+                        printf("[M%u] Slider/Twist Switch: %d\n",
+                            module,
+                            report->analogs[assigned[module].axis0]
+                        );
+                        printf("[M%u] Slider/Twist Switch Spot: %u\n", module, assigned[module].axis0);
+                        #endif
                     }
                     break;
 
                 case ACCEL:
                     {
-                        // Due to 8-axis limit of DirectInput, cannot support a full column of 3/4 accel/gyro (9/12 axes)
+                        // Due to 8-axis limit of DirectInput, cannot support an individual report of 3/4 accel/gyro (9/12 axes)
                         // Something like joystick + twist switch + accel + gyro would not work (9 axes)
                         // However, 2x twist switch + accel + gyro would work (8 axes)
                         // Or, a slider (1x2) + accel + gyro (7 axes)
+                        // Should split up, if necessary
                     }
                     break;
 
                 case GYRO:
                     {
-                        // Due to 8-axis limit of DirectInput, cannot support a full column of 3/4 accel/gyro (9/12 axes)
+                        // Due to 8-axis limit of DirectInput, cannot support an individual report of 3/4 accel/gyro (9/12 axes)
                         // Something like joystick + twist switch + accel + gyro would not work (9 axes)
                         // However, 2x twist switch + accel + gyro would work (8 axes)
                         // Or, a slider (1x2) + accel + gyro (7 axes)
+                        // Should split up, if necessary
                     }
                     break;
 
@@ -771,14 +989,15 @@ void modules_task(void)
                         if(identification != DISCONNECTED){
                             error_counts[module] = 0;
                             module_IDs[module] = identification;
-                            printf("Module %u Reconnected! \n", module);
+                            printf("[M%u] Reconnected! \n", module);
                         } else {
                             error_counts[module] += 1;
-                            printf("Module %u Reconnection attempt failed \n", module);
+                            printf("[M%u] Reconnection attempt failed \n", module);
 
                         }
                     }
                     break;
+
                 default:
                     break;
             }
@@ -800,21 +1019,13 @@ void modules_task(void)
     }
 
     #if defined(DEBUG)
-    // Mock gamepad reports for each column
-
-    gamepad_report_col_0.analogs[0] = (int16_t) (adc_read() - 2048);
-    gamepad_report_col_1.analogs[0] = (int16_t) (adc_read() - 2048);
-    gamepad_report_col_2.analogs[0] = (int16_t) (adc_read() - 2048);
-    gamepad_report_col_3.analogs[0] = (int16_t) (adc_read() - 2048);
-    gamepad_report_col_4.analogs[0] = (int16_t) (adc_read() - 2048);
+    // Mock data in the gamepad report
+    report->analogs[RY] = (int16_t) (adc_read() - 2048);
+    report->analogs[RZ] = (int16_t) (adc_read() - 2048);
 
     if(!gpio_get(15))
     {
-        gamepad_report_col_0.digitals |= 0x01;
-        gamepad_report_col_1.digitals |= 0x01;
-        gamepad_report_col_2.digitals |= 0x01;
-        gamepad_report_col_3.digitals |= 0x01;
-        gamepad_report_col_4.digitals |= 0x01;
+        report->digitals |= 0x01;
     }
 
     // Mock LED outputs

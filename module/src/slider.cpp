@@ -38,7 +38,7 @@ int main() {
     while(true)
     {
         // Read the voltage on the wiper by starting an ADC conversion
-        adc_select_input(0); // Select ADC0 (x)
+        adc_select_input(1); // Select ADC1 (x)
         uint16_t wiper = adc_read();
         
         // Load the wiper data into the buffer (LSB, MSB)

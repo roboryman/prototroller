@@ -81,7 +81,7 @@
 #define MODULE_JOYSTICK_VRY_PIN 26
 
 // SLIDER MODULE
-#define MODULE_SLIDER_ADCPIN 26
+#define MODULE_SLIDER_ADCPIN 27
 
 // TWIST SWITCH MODULE
 #define MODULE_TWIST_SWITCH_ADCPIN 27
@@ -123,8 +123,9 @@
 #endif
 
 // --- SPI ---
-#define BAUD_RATE   12000*1000 // 12 Mbps baud rate
-#define BUF_LEN     0x100 // 256(257?)-byte buffer
+// Max Baud Rate is 12 Mbps but isn't stable with 5+ modules
+#define BAUD_RATE   8000*1000 // 8 Mbps baud rate
+#define BUF_LEN     0x100 // 256-byte buffer
 #ifndef PICO_DEFAULT_SPI
 #define PICO_DEFAULT_SPI 0
 #endif

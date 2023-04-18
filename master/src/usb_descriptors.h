@@ -26,8 +26,9 @@
 #define USB_DESCRIPTORS_H_
 
 // Gamepad Report Descriptor for Prototroller
-// Support the maximum for each component, column wise (5 columns = 5 devices)
+// Support the maximum for each component
 // Refer to TUD_HID_REPORT_DESC_GAMEPAD template in hid_device.h
+// Note: May not be portable, depending on little-endian or big-endian device.
 #define TUD_HID_REPORT_DESC_GAMEPAD_PROTOTROLLER(...) \
   HID_USAGE_PAGE ( HID_USAGE_PAGE_DESKTOP     )                 ,\
   HID_USAGE      ( HID_USAGE_DESKTOP_GAMEPAD  )                 ,\
@@ -45,35 +46,35 @@
     HID_USAGE          ( HID_USAGE_DESKTOP_X                    ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_Y                    ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_Z                    ) ,\
-    HID_USAGE          ( HID_USAGE_DESKTOP_RZ                   ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_RX                   ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_RY                   ) ,\
+    HID_USAGE          ( HID_USAGE_DESKTOP_RZ                   ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_SLIDER               ) ,\
     HID_USAGE          ( HID_USAGE_DESKTOP_SLIDER               ) ,\
-    HID_LOGICAL_MIN    ( 0x81                                   ) ,\
-    HID_LOGICAL_MAX    ( 0x7f                                   ) ,\
+    HID_LOGICAL_MIN_N  ( -2048, 2                               ) ,\
+    HID_LOGICAL_MAX_N  ( 2047,  2                               ) ,\
     HID_REPORT_COUNT   ( 8                                      ) ,\
     HID_REPORT_SIZE    ( 16                                     ) ,\
     HID_INPUT          ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
   HID_COLLECTION_END \
 
-enum
-{
-  REPORT_ID_KEYBOARD = 1,
-  REPORT_ID_MOUSE,
-  REPORT_ID_CONSUMER_CONTROL,
-  REPORT_ID_GAMEPAD,
-  REPORT_ID_COUNT
-};
+// enum
+// {
+//   REPORT_ID_KEYBOARD = 1,
+//   REPORT_ID_MOUSE,
+//   REPORT_ID_CONSUMER_CONTROL,
+//   REPORT_ID_GAMEPAD,
+//   REPORT_ID_COUNT
+// };
 
 enum
 {
-  REPORT_ID_COLUMN_0 = 1,
-  REPORT_ID_COLUMN_1,
-  REPORT_ID_COLUMN_2,
-  REPORT_ID_COLUMN_3,
-  REPORT_ID_COLUMN_4,
-  REPORT_ID_COLUMN_COUNT
+  REPORT_ID_0 = 1,
+  REPORT_ID_1,
+  REPORT_ID_2,
+  REPORT_ID_3,
+  REPORT_ID_4,
+  REPORT_ID_COUNT
 };
 
 #endif /* USB_DESCRIPTORS_H_ */

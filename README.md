@@ -1,15 +1,14 @@
 <p align="center">
-  <img src="assets/logo.png" width="200" align="center" />
+  <img src="assets/logo.png" width="300" align="center" />
+  <img src="assets/side_view_modules.JPEG" width="300" align="center" />
 </p>
 
 ## About
-We aim to create a ***modular*** controller that is full-stack, feature-rich, responsive, and robust. The controller could be used for any HID-compliant purpose, but we focus on developing hot-swappable modules that can form customizable gamepads.
+The Prototroller is a ***modular*** controller that is full-stack, feature-rich, responsive, and robust. The controller could be used for any HID-compliant purpose, but we focus on developing hot-swappable modules that can form customizable gamepads.
 
-A potential use case is general hardware level remapping for quality of life.
+A potential use case is general hardware level remapping for quality of life. Another is rapidly prototyping different controller layouts for games or simulations in development.
 
-Another is rapidly prototyping different controller layouts for games or simulations in development.
-
-In any case, this is the __Prototroller__. Our team consists of 5 members:
+Our team consists of 5 members:
 - Yu-yang Hsieh
 - Britton McLeavy
 - Caleb O'Malley
@@ -18,12 +17,17 @@ In any case, this is the __Prototroller__. Our team consists of 5 members:
 
 This project is developed in conjunction with the UF CpE Capstone program (Fall 2022 - Spring 2023). This project is self-funded. As such, donations are appreciated in this educational pursuit (hardware is not cheap nowadays).
 
-## Hardware Architecture and Aesthetics
-At the highest abstraction our hardware consists of the following:
+<p align="center">
+  <img src="assets/playing_l4d2.JPEG" width="250" align="center" />
+</p>
+
+## Architecture and Aesthetics
+At the highest abstraction the Prototroller consists of the following:
 - Master Board 
 - Module Boards
 - Component Interfaces
 - Enclosures
+- Firmware
 
 ### Master Board
 
@@ -44,7 +48,7 @@ The connection interface between the master board and module boards uses 6-pin m
 
 <p>
 
-<img align="right" src="assets/module_board_rev_a.png" width="250"/>
+<img align="right" src="assets/mod_board_close_up.JPEG" width="250"/>
 
 Module boards are generic and constrained at 30x30mm with no direct user interface (except for the connector and SWD headers). On the sides are headers providing 14 signals to a component interface board that would sit above. This way there are no unique module boards for each component, and we simply offload the task to the component interface board by hand.
 <br clear="right"/>
@@ -64,15 +68,22 @@ The component interface boards are veroboards sitting above the module board hea
 
 This would not be a very comfortable controller to use without enclosures.
 
-The master board is enclosed by a chassis and grips. The master board is raised above the chassis with standoffs.
+The master board is enclosed by a chassis and grips. The master board is screwed to the chassis.
 
 The module enclosures contain the module board and component interface boards, but do not cover the component.
 
-Note: The mockup below is a bit outdated in terms of dimensions, but demonstrates the overall design well enough (including enclosures).
+<p align="center">
+  <img src="assets/thumb_switch_close_up.JPEG" width="600" align="center" />
+</p>
+
+### Firmware
+
+Each type of module has its own assosciated firmware that can be flashed via the SWD header pins with picoprobe firmware. The master board can be flashed via the normal way of "dragging" the binaries. See below for more details on flashing. The Prototroller has been extensively tested on Windows systems, but will likely work on Mac, Linux, and generally any OS that supports HID gamepads.
 
 <p align="center">
-  <img src="assets/overall.png" width="600" align="center" />
+  <img src="assets/Windows_Controller_View.png" width="300" align="center" />
 </p>
+
 
 ## Usage
 There are a few ways you may use the Prototroller.
@@ -88,7 +99,7 @@ If you want to develop your own hardware to use with our software, that is excel
 You may use our designs as a starting point. For example, you may want to make the modules slightly larger.
 
 ## Building and Flashing Master Boards
-You may use the provided VSCode launch debug configuration and flash task. This requires a Picoprobe, OpenOCD, and Cortex Debug.
+You may use the provided VSCode launch debug configuration and flash task. This requires a Picoprobe, OpenOCD, and Cortex Debug. Instructions are available in ```/ide```.
 An easier way is to use the USB receptacle to mount and flash RP2040 binaries (.uf2), accessible by holding down BOOTSEL and performing a reset. **If you are using VSCode, you can simply edit settings.json for your SDK path, build the target, and proceed to step 5**. Otherwise, the process to generate the binary is as so:
 1. Ensure you have the Pico SDK cloned somewhere, such as ```~/pico-sdk```.
 2. Make and cd into a 'build' subdirectory, and export the Pico SDK path:
@@ -108,7 +119,7 @@ An easier way is to use the USB receptacle to mount and flash RP2040 binaries (.
 ## Building and Flashing Module Boards
 The module boards do not have a USB receptacle. You must use SWD in conjunction with a debug probe. We recommend the official Raspberry Pi Debug Probe ($12), or a Pico flashed with the Picoprobe firmware.
 
-This is how you might do it after setting up Picoprobe, OpenOCD, etc:
+Instructions are available in ```/ide```. This is how you might do it after setting up Picoprobe, OpenOCD, etc:
 1. Follow the steps listed in "Building and Flashing Master Boards" to generate the binary for the module boards.
 2. Connect SWDIO and SWCLK from debug probe to the SWD headers above the flash on the module board (labeled on rear silkscreen).
 3. Connect a *common ground* between the Picoprobe and the module board.
@@ -134,12 +145,18 @@ Alternatively, here is an excellent tutorial to setting up and using Picoprobe i
 - [x] Interconnect Design
 - [x] Module Board Design(s)
 - [x] Master Board Design
-- [x] Chassis/Module Enclosure Designs (Mar. 01, 2023)
-- [ ] Advanced Firmware (Mar. 01, 2023)
-- [ ] Advanced HID Drivers (Mar. 01, 2023)
-- [ ] Advanced Component Support (Mar. 01, 2023)
-- [ ] Finalized Firmware (April 01, 2023)
-- [ ] Prototroller Artifact (April 01, 2023)
+- [x] Chassis/Module Enclosure Designs
+- [x] Advanced Firmware
+- [x] Advanced HID Drivers
+- [x] Advanced Component Support
+- [x] Finalized Firmware
+- [x] Prototroller Artifact
+- [ ] Stretch: Wireless Support
+- [ ] Stretch: Power Optimization
+- [ ] Stretch: More types of modules
+
+Ideas for future modules: Trigger, D-Pad, Accelerometer, Gyroscope, Rounded Buttons. Could also do some cool things non-gaming related, such as an IR blaster and Bluetooth TX/RX modules.
+Adding new types of modules only requires the firmware and custom backpack.
 
 ## Acknowledgements
 Thank you to our stakeholder Carsten Thue-Bludworth for his infinite wisdom. His assistance keeps the project grounded and evolving in the best way possible.
@@ -153,3 +170,7 @@ Thank you to Phil's Lab on YouTube for the excellent courses and tutorials on ha
 Thank you to user testing participants for valuable feedback. Their insights and suggestions have helped us refine our design and ensure that our final product meets the needs and expectations of its intended users.
 
 Thank you to families, friends, and loved ones for their unwavering support and encouragement. Their belief in our abilities and commitment to our success has been a constant source of motivation and inspiration.
+
+<p align="center">
+  <img src="assets/side_view_no_modules.JPEG" width="600" align="center" />
+</p>
